@@ -45,4 +45,4 @@ EXPOSE 8080
 ENV NODE_ENV=production
 
 # Run database migrations and start the application
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run start:prod"]
+CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main"]
