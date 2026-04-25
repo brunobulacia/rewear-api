@@ -13,6 +13,8 @@ export declare class GarmentsService {
         };
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         titulo: string;
         descripcion: string | null;
         marca: string | null;
@@ -24,8 +26,6 @@ export declare class GarmentsService {
         imagenes: string[];
         nftTokenId: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         sellerId: string;
     }>;
     findAll(dto: ListGarmentsDto): Promise<{
@@ -66,14 +66,16 @@ export declare class GarmentsService {
         verification: {
             id: string;
             createdAt: Date;
-            garmentId: string;
             aiScore: number | null;
             authenticityPct: number | null;
             wearLevel: string | null;
             dictamen: string | null;
+            garmentId: string;
         };
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         titulo: string;
         descripcion: string | null;
         marca: string | null;
@@ -85,8 +87,6 @@ export declare class GarmentsService {
         imagenes: string[];
         nftTokenId: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         sellerId: string;
     }>;
     findByUser(sellerId: string): Promise<({
@@ -96,6 +96,8 @@ export declare class GarmentsService {
         };
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         titulo: string;
         descripcion: string | null;
         marca: string | null;
@@ -107,8 +109,6 @@ export declare class GarmentsService {
         imagenes: string[];
         nftTokenId: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         sellerId: string;
     })[]>;
     getMetadata(id: string): Promise<{

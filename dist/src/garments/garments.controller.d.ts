@@ -18,6 +18,8 @@ export declare class GarmentsController {
         };
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         titulo: string;
         descripcion: string | null;
         marca: string | null;
@@ -29,8 +31,6 @@ export declare class GarmentsController {
         imagenes: string[];
         nftTokenId: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         sellerId: string;
     }>;
     findMine(user: {
@@ -42,6 +42,8 @@ export declare class GarmentsController {
         };
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         titulo: string;
         descripcion: string | null;
         marca: string | null;
@@ -53,8 +55,6 @@ export declare class GarmentsController {
         imagenes: string[];
         nftTokenId: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         sellerId: string;
     })[]>;
     findAll(dto: ListGarmentsDto): Promise<{
@@ -117,14 +117,16 @@ export declare class GarmentsController {
         verification: {
             id: string;
             createdAt: Date;
-            garmentId: string;
             aiScore: number | null;
             authenticityPct: number | null;
             wearLevel: string | null;
             dictamen: string | null;
+            garmentId: string;
         };
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         titulo: string;
         descripcion: string | null;
         marca: string | null;
@@ -136,8 +138,6 @@ export declare class GarmentsController {
         imagenes: string[];
         nftTokenId: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
         sellerId: string;
     }>;
 }
