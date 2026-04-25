@@ -9,6 +9,7 @@
     "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
+    "rootDir": "./src",
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
@@ -19,5 +20,5 @@
     "noFallthroughCasesInSwitch": false,
     "resolveJsonModule": true
   },
-  "exclude": ["dist", "hardhat.config.ts", "scripts", "node_modules"]
+  "exclude": ["dist", "hardhat.config.ts", "scripts", "prisma", "node_modules"]
 }
