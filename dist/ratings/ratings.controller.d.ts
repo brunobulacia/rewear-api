@@ -1,0 +1,62 @@
+import { RatingsService, CreateRatingDto } from './ratings.service';
+export declare class RatingsController {
+    private readonly service;
+    constructor(service: RatingsService);
+    create(dto: CreateRatingDto, user: {
+        userId: string;
+    }): Promise<{
+        id: string;
+        createdAt: Date;
+        transactionId: string;
+        fromUserId: string;
+        toUserId: string;
+        score: number;
+        comment: string | null;
+    }>;
+    getByUser(userId: string): Promise<{
+        ratings: ({
+            transaction: {
+                garment: {
+                    id: string;
+                    titulo: string;
+                    imagenes: string[];
+                };
+            } & {
+                id: string;
+                createdAt: Date;
+                updatedAt: Date;
+                sellerId: string;
+                garmentId: string;
+                amount: number;
+                escrowTradeId: string | null;
+                escrowTxHash: string | null;
+                buyerId: string;
+                status: import(".prisma/client").$Enums.TransactionStatus;
+            };
+            fromUser: {
+                id: string;
+                walletAddress: string;
+                nombre: string;
+            };
+        } & {
+            id: string;
+            createdAt: Date;
+            transactionId: string;
+            fromUserId: string;
+            toUserId: string;
+            score: number;
+            comment: string | null;
+        })[];
+        avg: number;
+        total: number;
+    }>;
+    getByTransaction(transactionId: string): Promise<{
+        id: string;
+        createdAt: Date;
+        transactionId: string;
+        fromUserId: string;
+        toUserId: string;
+        score: number;
+        comment: string | null;
+    }>;
+}

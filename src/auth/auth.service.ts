@@ -97,6 +97,7 @@ export class AuthService {
         ubicacion: user.ubicacion,
         avatar: user.avatar,
         rol: user.rol,
+        createdAt: user.createdAt,
       },
     };
   }

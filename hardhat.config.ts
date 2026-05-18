@@ -10,8 +10,8 @@ const config: HardhatUserConfig = {
     settings: { optimizer: { enabled: true, runs: 200 } },
   },
   networks: {
-    amoy: {
-      url: process.env.POLYGON_AMOY_RPC || 'https://rpc-amoy.polygon.technology',
+    sepolia: {
+      url: process.env.SEPOLIA_RPC || 'https://rpc.sepolia.org',
       accounts: process.env.PLATFORM_WALLET_PRIVATE_KEY
         ? [process.env.PLATFORM_WALLET_PRIVATE_KEY]
         : [],

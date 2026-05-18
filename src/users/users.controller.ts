@@ -27,4 +27,9 @@ export class UsersController {
   getPublicProfile(@Param('address') address: string) {
     return this.usersService.getPublicProfile(address);
   }
+
+  @Get(':id/profile')
+  getProfileById(@Param('id') id: string) {
+    return this.usersService.getPublicProfileById(id);
+  }
 }

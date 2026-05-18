@@ -44,6 +44,28 @@ export class UsersService {
     return user;
   }
 
+  async getPublicProfileById(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        walletAddress: true,
+        nombre: true,
+        avatar: true,
+        rol: true,
+        createdAt: true,
+        garments: {
+          where: { estado: 'VERIFIED' },
+          select: { id: true, titulo: true, precio: true, imagenes: true, marca: true, talla: true },
+          take: 12,
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
+    return user;
+  }
+
   async getPublicProfile(walletAddress: string) {
     const user = await this.prisma.user.findUnique({
       where: { walletAddress: walletAddress.toLowerCase() },

@@ -5,6 +5,10 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { GarmentsModule } from './garments/garments.module';
 import { BlockchainModule } from './blockchain/blockchain.module';
+import { TransactionsModule } from './transactions/transactions.module';
+import { AdminModule } from './admin/admin.module';
+import { RatingsModule } from './ratings/ratings.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -14,6 +18,10 @@ import { BlockchainModule } from './blockchain/blockchain.module';
     UsersModule,
     GarmentsModule,
     BlockchainModule,
+    TransactionsModule,
+    AdminModule,
+    RatingsModule,
+    MessagesModule,
   ],
 })
 export class AppModule {}

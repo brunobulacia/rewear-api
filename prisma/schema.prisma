@@ -88,8 +88,9 @@ model Transaction {
   sellerId     String            @map("seller_id")
   garmentId    String            @map("garment_id")
   amount       Float
-  escrowTxHash String?           @map("escrow_tx_hash")
-  status       TransactionStatus @default(PENDING)
+  escrowTxHash  String?           @map("escrow_tx_hash")
+  escrowTradeId String?           @map("escrow_trade_id")
+  status        TransactionStatus @default(PENDING)
   createdAt    DateTime          @default(now()) @map("created_at")
   updatedAt    DateTime          @updatedAt @map("updated_at")
 

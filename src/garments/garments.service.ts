@@ -144,7 +144,7 @@ export class GarmentsService {
         },
         { trait_type: 'Vendedor', value: garment.seller.nombre || garment.seller.walletAddress },
         { trait_type: 'Plataforma', value: 'ReWear' },
-        { trait_type: 'Red', value: 'Polygon Amoy' },
+        { trait_type: 'Red', value: 'Ethereum Sepolia' },
       ],
       rewear: {
         garmentId: garment.id,
