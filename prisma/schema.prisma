@@ -56,6 +56,7 @@ model Garment {
   estado             GarmentStatus      @default(PENDING)
   sellerId           String             @map("seller_id")
   imagenes           String[]
+  imageHash          String?            @map("image_hash")
   nftTokenId         String?            @map("nft_token_id")
   verificationStatus VerificationStatus @default(PENDING) @map("verification_status")
   createdAt          DateTime           @default(now()) @map("created_at")

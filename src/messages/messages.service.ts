@@ -1,8 +1,14 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { IsString, IsNotEmpty } from 'class-validator';
 import { PrismaService } from '../prisma/prisma.service';
 
 export class SendMessageDto {
+  @IsString()
+  @IsNotEmpty()
   transactionId: string;
+
+  @IsString()
+  @IsNotEmpty()
   content: string;
 }
 

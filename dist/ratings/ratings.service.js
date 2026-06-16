@@ -11,10 +11,29 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.RatingsService = exports.CreateRatingDto = void 0;
 const common_1 = require("@nestjs/common");
+const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
 const prisma_service_1 = require("../prisma/prisma.service");
 class CreateRatingDto {
 }
 exports.CreateRatingDto = CreateRatingDto;
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], CreateRatingDto.prototype, "transactionId", void 0);
+__decorate([
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(5),
+    __metadata("design:type", Number)
+], CreateRatingDto.prototype, "score", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateRatingDto.prototype, "comment", void 0);
 let RatingsService = class RatingsService {
     constructor(prisma) {
         this.prisma = prisma;

@@ -9,6 +9,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.VerificationModule = void 0;
 const common_1 = require("@nestjs/common");
 const verification_service_1 = require("./verification.service");
+const vision_service_1 = require("./vision.service");
 const blockchain_module_1 = require("../blockchain/blockchain.module");
 const prisma_module_1 = require("../prisma/prisma.module");
 let VerificationModule = class VerificationModule {
@@ -17,7 +18,7 @@ exports.VerificationModule = VerificationModule;
 exports.VerificationModule = VerificationModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule, blockchain_module_1.BlockchainModule],
-        providers: [verification_service_1.VerificationService],
+        providers: [verification_service_1.VerificationService, vision_service_1.VisionService],
         exports: [verification_service_1.VerificationService],
     })
 ], VerificationModule);

@@ -11,10 +11,10 @@ export declare class RatingsService {
         id: string;
         createdAt: Date;
         transactionId: string;
-        fromUserId: string;
-        toUserId: string;
         score: number;
         comment: string | null;
+        fromUserId: string;
+        toUserId: string;
     }>;
     getByUser(userId: string): Promise<{
         ratings: ({
@@ -45,10 +45,10 @@ export declare class RatingsService {
             id: string;
             createdAt: Date;
             transactionId: string;
-            fromUserId: string;
-            toUserId: string;
             score: number;
             comment: string | null;
+            fromUserId: string;
+            toUserId: string;
         })[];
         avg: number;
         total: number;
@@ -57,9 +57,9 @@ export declare class RatingsService {
         id: string;
         createdAt: Date;
         transactionId: string;
-        fromUserId: string;
-        toUserId: string;
         score: number;
         comment: string | null;
+        fromUserId: string;
+        toUserId: string;
     }>;
 }

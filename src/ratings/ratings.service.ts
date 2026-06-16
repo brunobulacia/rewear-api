@@ -1,9 +1,21 @@
 import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { IsString, IsNotEmpty, IsInt, Min, Max, IsOptional } from 'class-validator';
+import { Type } from 'class-transformer';
 import { PrismaService } from '../prisma/prisma.service';
 
 export class CreateRatingDto {
+  @IsString()
+  @IsNotEmpty()
   transactionId: string;
-  score: number;        // 1–5
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  score: number; // 1–5
+
+  @IsOptional()
+  @IsString()
   comment?: string;
 }
 

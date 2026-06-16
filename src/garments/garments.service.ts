@@ -1,19 +1,26 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ListGarmentsDto } from './dto/list-garments.dto';
 import { CreateGarmentDto } from './dto/create-garment.dto';
+import { UpdateGarmentDto } from './dto/update-garment.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class GarmentsService {
   constructor(private prisma: PrismaService) {}
 
-  async create(dto: CreateGarmentDto, sellerId: string, imagenes: string[]) {
+  async create(
+    dto: CreateGarmentDto,
+    sellerId: string,
+    imagenes: string[],
+    imageHash?: string,
+  ) {
     return this.prisma.garment.create({
       data: {
         ...dto,
         sellerId,
         imagenes,
+        imageHash,
         verificationStatus: 'PENDING',
         estado: 'PENDING',
       },
@@ -23,6 +30,41 @@ export class GarmentsService {
         },
       },
     });
+  }
+
+  /**
+   * Trazabilidad de imágenes: busca si una foto (por su hash SHA-256) ya está
+   * registrada en el sistema y, de estarlo, devuelve su pasaporte NFT.
+   */
+  async verifyByImageHash(imageHash: string) {
+    const garment = await this.prisma.garment.findFirst({
+      where: { imageHash },
+      include: {
+        seller: { select: { walletAddress: true, nombre: true } },
+        verification: { select: { wearLevel: true, authenticityPct: true, dictamen: true } },
+      },
+    });
+
+    if (!garment) {
+      return { registered: false, imageHash };
+    }
+
+    return {
+      registered: true,
+      imageHash,
+      garment: {
+        id: garment.id,
+        titulo: garment.titulo,
+        marca: garment.marca,
+        estado: garment.estado,
+        nftTokenId: garment.nftTokenId,
+        imagen: garment.imagenes?.[0] ?? null,
+        sellerWallet: garment.seller?.walletAddress ?? null,
+        sellerNombre: garment.seller?.nombre ?? null,
+        verification: garment.verification ?? null,
+        createdAt: garment.createdAt,
+      },
+    };
   }
 
   async findAll(dto: ListGarmentsDto) {
@@ -98,6 +140,27 @@ export class GarmentsService {
 
     if (!garment) throw new NotFoundException('Prenda no encontrada');
     return garment;
+  }
+
+  /**
+   * Actualiza campos editables de una prenda (precio, título, etc.).
+   * Solo el dueño (vendedor) puede editarla. El NFT no se ve afectado:
+   * el precio vive off-chain.
+   */
+  async update(id: string, sellerId: string, dto: UpdateGarmentDto) {
+    const garment = await this.prisma.garment.findUnique({ where: { id } });
+    if (!garment) throw new NotFoundException('Prenda no encontrada');
+    if (garment.sellerId !== sellerId) {
+      throw new ForbiddenException('No podés editar una prenda que no es tuya');
+    }
+
+    return this.prisma.garment.update({
+      where: { id },
+      data: { ...dto },
+      include: {
+        verification: { select: { wearLevel: true, authenticityPct: true } },
+      },
+    });
   }
 
   async findByUser(sellerId: string) {

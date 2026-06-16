@@ -11,10 +11,21 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessagesService = exports.SendMessageDto = void 0;
 const common_1 = require("@nestjs/common");
+const class_validator_1 = require("class-validator");
 const prisma_service_1 = require("../prisma/prisma.service");
 class SendMessageDto {
 }
 exports.SendMessageDto = SendMessageDto;
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], SendMessageDto.prototype, "transactionId", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], SendMessageDto.prototype, "content", void 0);
 let MessagesService = class MessagesService {
     constructor(prisma) {
         this.prisma = prisma;

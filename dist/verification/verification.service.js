@@ -15,26 +15,42 @@ const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const prisma_service_1 = require("../prisma/prisma.service");
 const blockchain_service_1 = require("../blockchain/blockchain.service");
-const DICTAMENES = [
-    'Análisis de IA completado. La prenda presenta características visuales consistentes con la marca declarada. Las costuras, etiquetas y materiales son auténticos según los patrones de referencia del modelo de visión. Se aprueba su publicación.',
-    'Verificación exitosa. El estado de conservación es consistente con el nivel declarado por el vendedor. No se detectan signos de deterioro significativo ni alteraciones en los materiales. Prenda apta para el marketplace ReWear.',
-    'Análisis completado con resultado positivo. La prenda ha sido verificada como auténtica mediante análisis espectral de imagen y comparación con base de datos de referencia. El desgaste observado es uniforme y coherente.',
-    'Dictamen favorable. Las imágenes analizadas confirman la autenticidad de la prenda y su buen estado general. Los patrones de tejido, costuras y etiquetas coinciden con los estándares de la marca. Aprobada para emisión de pasaporte digital.',
-];
-const WEAR_LEVELS = ['Excelente', 'Muy bueno', 'Bueno'];
+const vision_service_1 = require("./vision.service");
 let VerificationService = VerificationService_1 = class VerificationService {
-    constructor(prisma, blockchain, config) {
+    constructor(prisma, blockchain, vision, config) {
         this.prisma = prisma;
         this.blockchain = blockchain;
+        this.vision = vision;
         this.config = config;
         this.logger = new common_1.Logger(VerificationService_1.name);
     }
     async runPipeline(garmentId) {
         try {
-            await this.markInProgress(garmentId);
-            await this.simulateAIDelay();
-            const { aiScore, authenticityPct, wearLevel, dictamen } = this.generateAIResult();
-            await this.saveVerification(garmentId, { aiScore, authenticityPct, wearLevel, dictamen });
+            const garment = await this.markInProgress(garmentId);
+            const imageUrl = garment?.imagenes?.[0];
+            if (!imageUrl)
+                throw new Error('La prenda no tiene imágenes para analizar');
+            const result = await this.vision.classifyGarment(imageUrl);
+            if (!result.isClothing) {
+                await this.saveVerification(garmentId, {
+                    aiScore: result.authenticityPct,
+                    authenticityPct: result.authenticityPct,
+                    wearLevel: result.wearLevel,
+                    dictamen: `RECHAZADA: ${result.dictamen || result.label}`,
+                });
+                await this.prisma.garment.update({
+                    where: { id: garmentId },
+                    data: { verificationStatus: 'REJECTED', estado: 'REJECTED' },
+                });
+                this.logger.warn(`Prenda ${garmentId} RECHAZADA por visión: ${result.label}`);
+                return;
+            }
+            await this.saveVerification(garmentId, {
+                aiScore: result.authenticityPct,
+                authenticityPct: result.authenticityPct,
+                wearLevel: result.wearLevel,
+                dictamen: result.dictamen,
+            });
             await this.approveGarment(garmentId);
             await this.mintNFT(garmentId);
         }
@@ -49,21 +65,12 @@ let VerificationService = VerificationService_1 = class VerificationService {
         }
     }
     async markInProgress(garmentId) {
-        await this.prisma.garment.update({
+        const garment = await this.prisma.garment.update({
             where: { id: garmentId },
             data: { verificationStatus: 'IN_PROGRESS' },
         });
-        this.logger.log(`Verificando prenda ${garmentId}...`);
-    }
-    simulateAIDelay() {
-        return new Promise((r) => setTimeout(r, 3000));
-    }
-    generateAIResult() {
-        const aiScore = 78 + Math.random() * 20;
-        const authenticityPct = 82 + Math.random() * 16;
-        const wearLevel = WEAR_LEVELS[Math.floor(Math.random() * WEAR_LEVELS.length)];
-        const dictamen = DICTAMENES[Math.floor(Math.random() * DICTAMENES.length)];
-        return { aiScore, authenticityPct, wearLevel, dictamen };
+        this.logger.log(`Analizando imagen de la prenda ${garmentId} con visión por computadora...`);
+        return garment;
     }
     async saveVerification(garmentId, data) {
         await this.prisma.verification.create({
@@ -101,6 +108,7 @@ exports.VerificationService = VerificationService = VerificationService_1 = __de
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
         blockchain_service_1.BlockchainService,
+        vision_service_1.VisionService,
         config_1.ConfigService])
 ], VerificationService);
 //# sourceMappingURL=verification.service.js.map

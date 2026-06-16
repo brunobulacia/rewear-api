@@ -10,15 +10,17 @@ exports.GarmentsModule = void 0;
 const common_1 = require("@nestjs/common");
 const garments_controller_1 = require("./garments.controller");
 const garments_service_1 = require("./garments.service");
+const cloudinary_service_1 = require("../storage/cloudinary.service");
 const verification_module_1 = require("../verification/verification.module");
+const blockchain_module_1 = require("../blockchain/blockchain.module");
 let GarmentsModule = class GarmentsModule {
 };
 exports.GarmentsModule = GarmentsModule;
 exports.GarmentsModule = GarmentsModule = __decorate([
     (0, common_1.Module)({
-        imports: [verification_module_1.VerificationModule],
+        imports: [verification_module_1.VerificationModule, blockchain_module_1.BlockchainModule],
         controllers: [garments_controller_1.GarmentsController],
-        providers: [garments_service_1.GarmentsService],
+        providers: [garments_service_1.GarmentsService, cloudinary_service_1.CloudinaryService],
     })
 ], GarmentsModule);
 //# sourceMappingURL=garments.module.js.map

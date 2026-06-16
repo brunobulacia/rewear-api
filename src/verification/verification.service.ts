@@ -2,15 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { BlockchainService } from '../blockchain/blockchain.service';
-
-const DICTAMENES = [
-  'Análisis de IA completado. La prenda presenta características visuales consistentes con la marca declarada. Las costuras, etiquetas y materiales son auténticos según los patrones de referencia del modelo de visión. Se aprueba su publicación.',
-  'Verificación exitosa. El estado de conservación es consistente con el nivel declarado por el vendedor. No se detectan signos de deterioro significativo ni alteraciones en los materiales. Prenda apta para el marketplace ReWear.',
-  'Análisis completado con resultado positivo. La prenda ha sido verificada como auténtica mediante análisis espectral de imagen y comparación con base de datos de referencia. El desgaste observado es uniforme y coherente.',
-  'Dictamen favorable. Las imágenes analizadas confirman la autenticidad de la prenda y su buen estado general. Los patrones de tejido, costuras y etiquetas coinciden con los estándares de la marca. Aprobada para emisión de pasaporte digital.',
-];
-
-const WEAR_LEVELS = ['Excelente', 'Muy bueno', 'Bueno'];
+import { VisionService } from './vision.service';
 
 @Injectable()
 export class VerificationService {
@@ -19,20 +11,47 @@ export class VerificationService {
   constructor(
     private prisma: PrismaService,
     private blockchain: BlockchainService,
+    private vision: VisionService,
     private config: ConfigService,
   ) {}
 
   /**
-   * Pipeline completo: IA → aprobación → mint NFT.
+   * Pipeline completo: VISIÓN (¿es ropa?) → aprobación → mint NFT.
+   * Si la imagen no es una prenda, se RECHAZA y no se mintea nada.
    * Se llama de forma asíncrona (fire-and-forget) desde el controller.
    */
   async runPipeline(garmentId: string): Promise<void> {
     try {
-      await this.markInProgress(garmentId);
-      await this.simulateAIDelay();
-      const { aiScore, authenticityPct, wearLevel, dictamen } =
-        this.generateAIResult();
-      await this.saveVerification(garmentId, { aiScore, authenticityPct, wearLevel, dictamen });
+      const garment = await this.markInProgress(garmentId);
+      const imageUrl = garment?.imagenes?.[0];
+      if (!imageUrl) throw new Error('La prenda no tiene imágenes para analizar');
+
+      // 1) Visión por computadora: clasifica la imagen con Claude
+      const result = await this.vision.classifyGarment(imageUrl);
+
+      if (!result.isClothing) {
+        // No es una prenda → rechazo, sin mint
+        await this.saveVerification(garmentId, {
+          aiScore: result.authenticityPct,
+          authenticityPct: result.authenticityPct,
+          wearLevel: result.wearLevel,
+          dictamen: `RECHAZADA: ${result.dictamen || result.label}`,
+        });
+        await this.prisma.garment.update({
+          where: { id: garmentId },
+          data: { verificationStatus: 'REJECTED', estado: 'REJECTED' },
+        });
+        this.logger.warn(`Prenda ${garmentId} RECHAZADA por visión: ${result.label}`);
+        return;
+      }
+
+      // 2) Es ropa → guarda dictamen real, aprueba y mintea
+      await this.saveVerification(garmentId, {
+        aiScore: result.authenticityPct,
+        authenticityPct: result.authenticityPct,
+        wearLevel: result.wearLevel,
+        dictamen: result.dictamen,
+      });
       await this.approveGarment(garmentId);
       await this.mintNFT(garmentId);
     } catch (err) {
@@ -47,23 +66,12 @@ export class VerificationService {
   }
 
   private async markInProgress(garmentId: string) {
-    await this.prisma.garment.update({
+    const garment = await this.prisma.garment.update({
       where: { id: garmentId },
       data: { verificationStatus: 'IN_PROGRESS' },
     });
-    this.logger.log(`Verificando prenda ${garmentId}...`);
-  }
-
-  private simulateAIDelay(): Promise<void> {
-    return new Promise((r) => setTimeout(r, 3000));
-  }
-
-  private generateAIResult() {
-    const aiScore = 78 + Math.random() * 20;
-    const authenticityPct = 82 + Math.random() * 16;
-    const wearLevel = WEAR_LEVELS[Math.floor(Math.random() * WEAR_LEVELS.length)];
-    const dictamen = DICTAMENES[Math.floor(Math.random() * DICTAMENES.length)];
-    return { aiScore, authenticityPct, wearLevel, dictamen };
+    this.logger.log(`Analizando imagen de la prenda ${garmentId} con visión por computadora...`);
+    return garment;
   }
 
   private async saveVerification(

@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { TransactionsService } from '../transactions/transactions.service';
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly transactions: TransactionsService,
+  ) {}
 
   async getStats() {
     const [
@@ -33,7 +37,7 @@ export class AdminService {
   }
 
   async getTransactions(limit = 20) {
-    return this.prisma.transaction.findMany({
+    const txs = await this.prisma.transaction.findMany({
       take: limit,
       orderBy: { createdAt: 'desc' },
       include: {
@@ -43,6 +47,8 @@ export class AdminService {
         disputes: { select: { id: true, reason: true, status: true } },
       },
     });
+    // Alinear con la forma que espera el frontend (amount → amountMatic)
+    return txs.map(({ amount, ...tx }) => ({ ...tx, amountMatic: amount }));
   }
 
   async getDisputes() {
@@ -65,20 +71,10 @@ export class AdminService {
     const dispute = await this.prisma.dispute.findFirst({ where: { transactionId } });
     if (!dispute) throw new Error('Disputa no encontrada');
 
-    await this.prisma.dispute.updateMany({
-      where: { transactionId },
-      data: { status: 'RESOLVED', resolution: buyerWins ? 'Reembolso al comprador' : 'Fondos liberados al vendedor' },
-    });
-
-    await this.prisma.transaction.update({
-      where: { id: transactionId },
-      data: { status: buyerWins ? 'REFUNDED' : 'COMPLETED' },
-    });
-
-    await this.prisma.garment.updateMany({
-      where: { transactions: { some: { id: transactionId } } },
-      data: { estado: buyerWins ? 'VERIFIED' : 'SOLD' },
-    });
+    // Delega en TransactionsService, que ejecuta la resolución ON-CHAIN
+    // (escrow.resolveDispute → libera o reembolsa el ETH real), transfiere el
+    // NFT si gana el vendedor, y actualiza disputa/transacción/prenda en la DB.
+    await this.transactions.resolveDispute(transactionId, { buyerWins });
 
     return { ok: true };
   }

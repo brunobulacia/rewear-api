@@ -14,8 +14,11 @@ exports.BlockchainService = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
 const ethers_1 = require("ethers");
-const GarmentNFTAbi = require("./abi/GarmentNFT.json");
-const EscrowAbi = require("./abi/Escrow.json");
+const GarmentNFTAbiJson = require("./abi/GarmentNFT.json");
+const EscrowAbiJson = require("./abi/Escrow.json");
+const GarmentNFTAbi = GarmentNFTAbiJson.default ?? GarmentNFTAbiJson;
+const EscrowAbi = EscrowAbiJson.default ?? EscrowAbiJson;
+const DEFAULT_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 let BlockchainService = BlockchainService_1 = class BlockchainService {
     constructor(config) {
         this.config = config;
@@ -24,19 +27,27 @@ let BlockchainService = BlockchainService_1 = class BlockchainService {
         this.escrowContract = null;
         this.provider = null;
     }
-    onModuleInit() {
+    async onModuleInit() {
         const privateKey = this.config.get('PLATFORM_WALLET_PRIVATE_KEY');
         const nftAddress = this.config.get('NFT_CONTRACT_ADDRESS');
         const escrowAddress = this.config.get('ESCROW_CONTRACT_ADDRESS');
-        const rpcUrl = this.config.get('SEPOLIA_RPC')
-            || 'https://rpc.sepolia.org';
+        const rpcUrl = this.config.get('SEPOLIA_RPC') || DEFAULT_RPC;
         if (!privateKey) {
             this.logger.warn('PLATFORM_WALLET_PRIVATE_KEY no configurado. Blockchain deshabilitado.');
             return;
         }
         try {
             this.provider = new ethers_1.ethers.JsonRpcProvider(rpcUrl);
+            const blockNumber = await this.provider.getBlockNumber();
+            this.logger.log(`Nodo Sepolia OK (${rpcUrl}) — bloque ${blockNumber}`);
             const wallet = new ethers_1.ethers.Wallet(privateKey, this.provider);
+            const balance = await this.provider.getBalance(wallet.address);
+            if (balance === 0n) {
+                this.logger.warn(`⚠️ Wallet ${wallet.address} SIN fondos de gas — las transacciones fallarán. Usá un faucet de Sepolia.`);
+            }
+            else {
+                this.logger.log(`Wallet ${wallet.address} con ${ethers_1.ethers.formatEther(balance)} ETH de gas`);
+            }
             if (nftAddress) {
                 this.nftContract = new ethers_1.ethers.Contract(nftAddress, GarmentNFTAbi, wallet);
                 this.logger.log(`NFT contract activo → ${nftAddress}`);
@@ -53,7 +64,7 @@ let BlockchainService = BlockchainService_1 = class BlockchainService {
             }
         }
         catch (err) {
-            this.logger.error('Error inicializando blockchain service', err);
+            this.logger.error(`Error inicializando blockchain service (RPC: ${rpcUrl})`, err);
         }
     }
     get isNftActive() { return this.nftContract !== null; }
@@ -119,6 +130,50 @@ let BlockchainService = BlockchainService_1 = class BlockchainService {
         catch {
             return 0;
         }
+    }
+    async getTokenHistory(tokenId) {
+        if (!this.nftContract || !this.provider)
+            return [];
+        const nft = this.nftContract;
+        const provider = this.provider;
+        const latest = await provider.getBlockNumber();
+        const WINDOW = 9500;
+        const SPAN = 80000;
+        const fromStart = Math.max(0, latest - SPAN);
+        const filter = nft.filters.Transfer(null, null, BigInt(tokenId));
+        const raw = [];
+        for (let to = latest; to >= fromStart; to -= WINDOW) {
+            const from = Math.max(fromStart, to - WINDOW + 1);
+            try {
+                const found = await nft.queryFilter(filter, from, to);
+                raw.push(...found);
+            }
+            catch (e) {
+                this.logger.warn(`queryFilter falló [${from},${to}] para token ${tokenId}`);
+            }
+            if (from === fromStart)
+                break;
+        }
+        raw.sort((a, b) => a.blockNumber - b.blockNumber || a.index - b.index);
+        const tsCache = {};
+        const out = [];
+        for (const e of raw) {
+            if (!(e.blockNumber in tsCache)) {
+                const blk = await provider.getBlock(e.blockNumber);
+                tsCache[e.blockNumber] = blk?.timestamp ?? 0;
+            }
+            const fromAddr = e.args?.[0];
+            const toAddr = e.args?.[1];
+            out.push({
+                type: fromAddr === ethers_1.ethers.ZeroAddress ? 'MINT' : 'TRANSFER',
+                from: fromAddr,
+                to: toAddr,
+                txHash: e.transactionHash,
+                blockNumber: e.blockNumber,
+                timestamp: tsCache[e.blockNumber],
+            });
+        }
+        return out;
     }
     get isEscrowActive() { return this.escrowContract !== null; }
     async confirmDelivery(tradeId) {

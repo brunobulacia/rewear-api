@@ -12,9 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../prisma/prisma.service");
+const transactions_service_1 = require("../transactions/transactions.service");
 let AdminService = class AdminService {
-    constructor(prisma) {
+    constructor(prisma, transactions) {
         this.prisma = prisma;
+        this.transactions = transactions;
     }
     async getStats() {
         const [totalUsers, totalGarments, verifiedGarments, activeTransactions, completedTransactions, openDisputes,] = await Promise.all([
@@ -35,7 +37,7 @@ let AdminService = class AdminService {
         };
     }
     async getTransactions(limit = 20) {
-        return this.prisma.transaction.findMany({
+        const txs = await this.prisma.transaction.findMany({
             take: limit,
             orderBy: { createdAt: 'desc' },
             include: {
@@ -45,6 +47,7 @@ let AdminService = class AdminService {
                 disputes: { select: { id: true, reason: true, status: true } },
             },
         });
+        return txs.map(({ amount, ...tx }) => ({ ...tx, amountMatic: amount }));
     }
     async getDisputes() {
         return this.prisma.dispute.findMany({
@@ -65,24 +68,14 @@ let AdminService = class AdminService {
         const dispute = await this.prisma.dispute.findFirst({ where: { transactionId } });
         if (!dispute)
             throw new Error('Disputa no encontrada');
-        await this.prisma.dispute.updateMany({
-            where: { transactionId },
-            data: { status: 'RESOLVED', resolution: buyerWins ? 'Reembolso al comprador' : 'Fondos liberados al vendedor' },
-        });
-        await this.prisma.transaction.update({
-            where: { id: transactionId },
-            data: { status: buyerWins ? 'REFUNDED' : 'COMPLETED' },
-        });
-        await this.prisma.garment.updateMany({
-            where: { transactions: { some: { id: transactionId } } },
-            data: { estado: buyerWins ? 'VERIFIED' : 'SOLD' },
-        });
+        await this.transactions.resolveDispute(transactionId, { buyerWins });
         return { ok: true };
     }
 };
 exports.AdminService = AdminService;
 exports.AdminService = AdminService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [prisma_service_1.PrismaService])
+    __metadata("design:paramtypes", [prisma_service_1.PrismaService,
+        transactions_service_1.TransactionsService])
 ], AdminService);
 //# sourceMappingURL=admin.service.js.map

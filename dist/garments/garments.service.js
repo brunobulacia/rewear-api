@@ -16,12 +16,13 @@ let GarmentsService = class GarmentsService {
     constructor(prisma) {
         this.prisma = prisma;
     }
-    async create(dto, sellerId, imagenes) {
+    async create(dto, sellerId, imagenes, imageHash) {
         return this.prisma.garment.create({
             data: {
                 ...dto,
                 sellerId,
                 imagenes,
+                imageHash,
                 verificationStatus: 'PENDING',
                 estado: 'PENDING',
             },
@@ -31,6 +32,34 @@ let GarmentsService = class GarmentsService {
                 },
             },
         });
+    }
+    async verifyByImageHash(imageHash) {
+        const garment = await this.prisma.garment.findFirst({
+            where: { imageHash },
+            include: {
+                seller: { select: { walletAddress: true, nombre: true } },
+                verification: { select: { wearLevel: true, authenticityPct: true, dictamen: true } },
+            },
+        });
+        if (!garment) {
+            return { registered: false, imageHash };
+        }
+        return {
+            registered: true,
+            imageHash,
+            garment: {
+                id: garment.id,
+                titulo: garment.titulo,
+                marca: garment.marca,
+                estado: garment.estado,
+                nftTokenId: garment.nftTokenId,
+                imagen: garment.imagenes?.[0] ?? null,
+                sellerWallet: garment.seller?.walletAddress ?? null,
+                sellerNombre: garment.seller?.nombre ?? null,
+                verification: garment.verification ?? null,
+                createdAt: garment.createdAt,
+            },
+        };
     }
     async findAll(dto) {
         const { marca, talla, categoria, precioMin, precioMax, q, page = 1, limit = 12 } = dto;
@@ -101,6 +130,21 @@ let GarmentsService = class GarmentsService {
         if (!garment)
             throw new common_1.NotFoundException('Prenda no encontrada');
         return garment;
+    }
+    async update(id, sellerId, dto) {
+        const garment = await this.prisma.garment.findUnique({ where: { id } });
+        if (!garment)
+            throw new common_1.NotFoundException('Prenda no encontrada');
+        if (garment.sellerId !== sellerId) {
+            throw new common_1.ForbiddenException('No podés editar una prenda que no es tuya');
+        }
+        return this.prisma.garment.update({
+            where: { id },
+            data: { ...dto },
+            include: {
+                verification: { select: { wearLevel: true, authenticityPct: true } },
+            },
+        });
     }
     async findByUser(sellerId) {
         return this.prisma.garment.findMany({

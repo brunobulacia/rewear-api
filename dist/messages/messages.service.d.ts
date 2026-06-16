@@ -15,8 +15,8 @@ export declare class MessagesService {
     } & {
         id: string;
         createdAt: Date;
-        transactionId: string | null;
         content: string;
+        transactionId: string | null;
         senderId: string;
         receiverId: string;
     }>;
@@ -41,8 +41,8 @@ export declare class MessagesService {
         } & {
             id: string;
             createdAt: Date;
-            transactionId: string | null;
             content: string;
+            transactionId: string | null;
             senderId: string;
             receiverId: string;
         };
@@ -56,8 +56,8 @@ export declare class MessagesService {
     } & {
         id: string;
         createdAt: Date;
-        transactionId: string | null;
         content: string;
+        transactionId: string | null;
         senderId: string;
         receiverId: string;
     })[]>;

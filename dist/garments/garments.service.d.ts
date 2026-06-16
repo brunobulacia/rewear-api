@@ -1,10 +1,11 @@
 import { PrismaService } from '../prisma/prisma.service';
 import { ListGarmentsDto } from './dto/list-garments.dto';
 import { CreateGarmentDto } from './dto/create-garment.dto';
+import { UpdateGarmentDto } from './dto/update-garment.dto';
 export declare class GarmentsService {
     private prisma;
     constructor(prisma: PrismaService);
-    create(dto: CreateGarmentDto, sellerId: string, imagenes: string[]): Promise<{
+    create(dto: CreateGarmentDto, sellerId: string, imagenes: string[], imageHash?: string): Promise<{
         seller: {
             id: string;
             walletAddress: string;
@@ -25,8 +26,33 @@ export declare class GarmentsService {
         estado: import(".prisma/client").$Enums.GarmentStatus;
         sellerId: string;
         imagenes: string[];
+        imageHash: string | null;
         nftTokenId: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
+    }>;
+    verifyByImageHash(imageHash: string): Promise<{
+        registered: boolean;
+        imageHash: string;
+        garment?: undefined;
+    } | {
+        registered: boolean;
+        imageHash: string;
+        garment: {
+            id: string;
+            titulo: string;
+            marca: string;
+            estado: import(".prisma/client").$Enums.GarmentStatus;
+            nftTokenId: string;
+            imagen: string;
+            sellerWallet: string;
+            sellerNombre: string;
+            verification: {
+                authenticityPct: number;
+                wearLevel: string;
+                dictamen: string;
+            };
+            createdAt: Date;
+        };
     }>;
     findAll(dto: ListGarmentsDto): Promise<{
         data: {
@@ -86,6 +112,30 @@ export declare class GarmentsService {
         estado: import(".prisma/client").$Enums.GarmentStatus;
         sellerId: string;
         imagenes: string[];
+        imageHash: string | null;
+        nftTokenId: string | null;
+        verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
+    }>;
+    update(id: string, sellerId: string, dto: UpdateGarmentDto): Promise<{
+        verification: {
+            authenticityPct: number;
+            wearLevel: string;
+        };
+    } & {
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        titulo: string;
+        descripcion: string | null;
+        marca: string | null;
+        talla: string | null;
+        categoria: string | null;
+        estilo: string | null;
+        precio: number;
+        estado: import(".prisma/client").$Enums.GarmentStatus;
+        sellerId: string;
+        imagenes: string[];
+        imageHash: string | null;
         nftTokenId: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
     }>;
@@ -108,6 +158,7 @@ export declare class GarmentsService {
         estado: import(".prisma/client").$Enums.GarmentStatus;
         sellerId: string;
         imagenes: string[];
+        imageHash: string | null;
         nftTokenId: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
     })[]>;

@@ -1,8 +1,17 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ethers } from 'ethers';
-import * as GarmentNFTAbi from './abi/GarmentNFT.json';
-import * as EscrowAbi from './abi/Escrow.json';
+import * as GarmentNFTAbiJson from './abi/GarmentNFT.json';
+import * as EscrowAbiJson from './abi/Escrow.json';
+
+// Los .json de ABI son arrays planos. Según cómo TS los importe pueden venir
+// envueltos en `.default`; normalizamos para no pasarle un objeto raro a ethers.
+const GarmentNFTAbi = (GarmentNFTAbiJson as any).default ?? GarmentNFTAbiJson;
+const EscrowAbi = (EscrowAbiJson as any).default ?? EscrowAbiJson;
+
+// RPC público de Sepolia confiable y sin API key (el mismo enfoque que EduPay).
+// rpc.sepolia.org está caído (404) y rompe TODA operación on-chain.
+const DEFAULT_RPC = 'https://ethereum-sepolia-rpc.publicnode.com';
 
 @Injectable()
 export class BlockchainService implements OnModuleInit {
@@ -13,12 +22,11 @@ export class BlockchainService implements OnModuleInit {
 
   constructor(private config: ConfigService) {}
 
-  onModuleInit() {
+  async onModuleInit() {
     const privateKey       = this.config.get<string>('PLATFORM_WALLET_PRIVATE_KEY');
     const nftAddress       = this.config.get<string>('NFT_CONTRACT_ADDRESS');
     const escrowAddress    = this.config.get<string>('ESCROW_CONTRACT_ADDRESS');
-    const rpcUrl           = this.config.get<string>('SEPOLIA_RPC')
-                           || 'https://rpc.sepolia.org';
+    const rpcUrl           = this.config.get<string>('SEPOLIA_RPC') || DEFAULT_RPC;
 
     if (!privateKey) {
       this.logger.warn('PLATFORM_WALLET_PRIVATE_KEY no configurado. Blockchain deshabilitado.');
@@ -27,7 +35,21 @@ export class BlockchainService implements OnModuleInit {
 
     try {
       this.provider = new ethers.JsonRpcProvider(rpcUrl);
+
+      // Verificar que el nodo responde ANTES de operar. Si el RPC está caído
+      // (ej. rpc.sepolia.org devuelve 404), todo mint/escrow fallaría en silencio.
+      const blockNumber = await this.provider.getBlockNumber();
+      this.logger.log(`Nodo Sepolia OK (${rpcUrl}) — bloque ${blockNumber}`);
+
       const wallet  = new ethers.Wallet(privateKey, this.provider);
+      const balance = await this.provider.getBalance(wallet.address);
+      if (balance === 0n) {
+        this.logger.warn(
+          `⚠️ Wallet ${wallet.address} SIN fondos de gas — las transacciones fallarán. Usá un faucet de Sepolia.`,
+        );
+      } else {
+        this.logger.log(`Wallet ${wallet.address} con ${ethers.formatEther(balance)} ETH de gas`);
+      }
 
       if (nftAddress) {
         this.nftContract = new ethers.Contract(nftAddress, GarmentNFTAbi, wallet);
@@ -43,7 +65,7 @@ export class BlockchainService implements OnModuleInit {
         this.logger.warn('ESCROW_CONTRACT_ADDRESS no configurado. Escrow deshabilitado.');
       }
     } catch (err) {
-      this.logger.error('Error inicializando blockchain service', err);
+      this.logger.error(`Error inicializando blockchain service (RPC: ${rpcUrl})`, err);
     }
   }
 
@@ -119,6 +141,66 @@ export class BlockchainService implements OnModuleInit {
     try {
       return Number(await this.nftContract.totalSupply());
     } catch { return 0; }
+  }
+
+  /**
+   * Historial on-chain de un NFT: todas las transferencias por las que pasó
+   * (mint + ventas + transferencias), reconstruidas desde los eventos Transfer
+   * del estándar ERC-721 filtrados por tokenId. Devuelve la cadena de propietarios.
+   */
+  async getTokenHistory(tokenId: string): Promise<
+    Array<{
+      type: 'MINT' | 'TRANSFER';
+      from: string;
+      to: string;
+      txHash: string;
+      blockNumber: number;
+      timestamp: number;
+    }>
+  > {
+    if (!this.nftContract || !this.provider) return [];
+    const nft = this.nftContract;
+    const provider = this.provider;
+
+    const latest = await provider.getBlockNumber();
+    const WINDOW = 9500; // límite seguro de eth_getLogs por consulta
+    const SPAN = 80000; // ~11 días hacia atrás (cubre todos los NFTs del proyecto)
+    const fromStart = Math.max(0, latest - SPAN);
+    const filter = (nft.filters as any).Transfer(null, null, BigInt(tokenId));
+
+    const raw: any[] = [];
+    for (let to = latest; to >= fromStart; to -= WINDOW) {
+      const from = Math.max(fromStart, to - WINDOW + 1);
+      try {
+        const found = await nft.queryFilter(filter, from, to);
+        raw.push(...found);
+      } catch (e) {
+        this.logger.warn(`queryFilter falló [${from},${to}] para token ${tokenId}`);
+      }
+      if (from === fromStart) break;
+    }
+
+    raw.sort((a, b) => a.blockNumber - b.blockNumber || a.index - b.index);
+
+    const tsCache: Record<number, number> = {};
+    const out = [];
+    for (const e of raw) {
+      if (!(e.blockNumber in tsCache)) {
+        const blk = await provider.getBlock(e.blockNumber);
+        tsCache[e.blockNumber] = blk?.timestamp ?? 0;
+      }
+      const fromAddr = e.args?.[0] as string;
+      const toAddr = e.args?.[1] as string;
+      out.push({
+        type: fromAddr === ethers.ZeroAddress ? ('MINT' as const) : ('TRANSFER' as const),
+        from: fromAddr,
+        to: toAddr,
+        txHash: e.transactionHash,
+        blockNumber: e.blockNumber,
+        timestamp: tsCache[e.blockNumber],
+      });
+    }
+    return out;
   }
 
   // ─────────────────────────────────────────────────────────────

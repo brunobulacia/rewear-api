@@ -10,7 +10,8 @@ export declare class AdminController {
         completedTransactions: number;
         openDisputes: number;
     }>;
-    getTransactions(): Promise<({
+    getTransactions(): Promise<{
+        amountMatic: number;
         garment: {
             id: string;
             titulo: string;
@@ -32,18 +33,16 @@ export declare class AdminController {
             walletAddress: string;
             nombre: string;
         };
-    } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
         sellerId: string;
         garmentId: string;
-        amount: number;
         escrowTradeId: string | null;
         escrowTxHash: string | null;
         buyerId: string;
         status: import(".prisma/client").$Enums.TransactionStatus;
-    })[]>;
+    }[]>;
     getDisputes(): Promise<({
         transaction: {
             garment: {

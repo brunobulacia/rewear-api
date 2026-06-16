@@ -22,6 +22,7 @@ export declare class TransactionsService {
             estado: import(".prisma/client").$Enums.GarmentStatus;
             sellerId: string;
             imagenes: string[];
+            imageHash: string | null;
             nftTokenId: string | null;
             verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         };
@@ -74,6 +75,7 @@ export declare class TransactionsService {
             estado: import(".prisma/client").$Enums.GarmentStatus;
             sellerId: string;
             imagenes: string[];
+            imageHash: string | null;
             nftTokenId: string | null;
             verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         };
@@ -126,6 +128,7 @@ export declare class TransactionsService {
             estado: import(".prisma/client").$Enums.GarmentStatus;
             sellerId: string;
             imagenes: string[];
+            imageHash: string | null;
             nftTokenId: string | null;
             verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         };
@@ -178,6 +181,7 @@ export declare class TransactionsService {
             estado: import(".prisma/client").$Enums.GarmentStatus;
             sellerId: string;
             imagenes: string[];
+            imageHash: string | null;
             nftTokenId: string | null;
             verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         };
@@ -269,6 +273,7 @@ export declare class TransactionsService {
             estado: import(".prisma/client").$Enums.GarmentStatus;
             sellerId: string;
             imagenes: string[];
+            imageHash: string | null;
             nftTokenId: string | null;
             verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         };

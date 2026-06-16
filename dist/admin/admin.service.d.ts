@@ -1,7 +1,9 @@
 import { PrismaService } from '../prisma/prisma.service';
+import { TransactionsService } from '../transactions/transactions.service';
 export declare class AdminService {
     private readonly prisma;
-    constructor(prisma: PrismaService);
+    private readonly transactions;
+    constructor(prisma: PrismaService, transactions: TransactionsService);
     getStats(): Promise<{
         totalUsers: number;
         totalGarments: number;
@@ -10,7 +12,8 @@ export declare class AdminService {
         completedTransactions: number;
         openDisputes: number;
     }>;
-    getTransactions(limit?: number): Promise<({
+    getTransactions(limit?: number): Promise<{
+        amountMatic: number;
         garment: {
             id: string;
             titulo: string;
@@ -32,18 +35,16 @@ export declare class AdminService {
             walletAddress: string;
             nombre: string;
         };
-    } & {
         id: string;
         createdAt: Date;
         updatedAt: Date;
         sellerId: string;
         garmentId: string;
-        amount: number;
         escrowTradeId: string | null;
         escrowTxHash: string | null;
         buyerId: string;
         status: import(".prisma/client").$Enums.TransactionStatus;
-    })[]>;
+    }[]>;
     getDisputes(): Promise<({
         transaction: {
             garment: {
