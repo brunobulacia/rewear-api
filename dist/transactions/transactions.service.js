@@ -110,7 +110,10 @@ let TransactionsService = TransactionsService_1 = class TransactionsService {
             throw new common_1.BadRequestException('La transacción no está en disputa');
         }
         if (tx.escrowTradeId) {
-            await this.blockchain.resolveDispute(tx.escrowTradeId, dto.buyerWins);
+            const ok = await this.blockchain.resolveDispute(tx.escrowTradeId, dto.buyerWins);
+            if (!ok) {
+                throw new common_1.BadRequestException('No se pudo resolver la disputa on-chain. La disputa debe estar abierta en el contrato (firmada por el comprador).');
+            }
         }
         const newStatus = dto.buyerWins ? 'REFUNDED' : 'COMPLETED';
         await this.prisma.dispute.updateMany({

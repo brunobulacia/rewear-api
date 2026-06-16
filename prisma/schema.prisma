@@ -27,6 +27,7 @@ model User {
   disputes     Dispute[]
   sentMessages Message[]     @relation("SentMessages")
   recvMessages Message[]     @relation("ReceivedMessages")
+  favorites    Favorite[]
 
   @@map("users")
 }
@@ -65,8 +66,22 @@ model Garment {
   seller       User          @relation("SellerGarments", fields: [sellerId], references: [id])
   verification Verification?
   transactions Transaction[]
+  favorites    Favorite[]
 
   @@map("garments")
+}
+
+model Favorite {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  garmentId String   @map("garment_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id])
+  garment Garment @relation(fields: [garmentId], references: [id])
+
+  @@unique([userId, garmentId])
+  @@map("favorites")
 }
 
 model Verification {

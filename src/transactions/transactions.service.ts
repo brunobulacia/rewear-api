@@ -142,9 +142,15 @@ export class TransactionsService {
       throw new BadRequestException('La transacción no está en disputa');
     }
 
-    // Llamar on-chain si el contrato está configurado
+    // Resolver on-chain PRIMERO. Si falla (ej. el trade no está DISPUTED en la
+    // blockchain), abortamos y NO tocamos la DB — así no quedan inconsistentes.
     if (tx.escrowTradeId) {
-      await this.blockchain.resolveDispute(tx.escrowTradeId, dto.buyerWins);
+      const ok = await this.blockchain.resolveDispute(tx.escrowTradeId, dto.buyerWins);
+      if (!ok) {
+        throw new BadRequestException(
+          'No se pudo resolver la disputa on-chain. La disputa debe estar abierta en el contrato (firmada por el comprador).',
+        );
+      }
     }
 
     const newStatus = dto.buyerWins ? 'REFUNDED' : 'COMPLETED';

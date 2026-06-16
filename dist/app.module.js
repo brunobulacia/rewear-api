@@ -18,6 +18,7 @@ const transactions_module_1 = require("./transactions/transactions.module");
 const admin_module_1 = require("./admin/admin.module");
 const ratings_module_1 = require("./ratings/ratings.module");
 const messages_module_1 = require("./messages/messages.module");
+const favorites_module_1 = require("./favorites/favorites.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -34,6 +35,7 @@ exports.AppModule = AppModule = __decorate([
             admin_module_1.AdminModule,
             ratings_module_1.RatingsModule,
             messages_module_1.MessagesModule,
+            favorites_module_1.FavoritesModule,
         ],
     })
 ], AppModule);

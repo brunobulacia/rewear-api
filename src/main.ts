@@ -17,8 +17,16 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
 
+  // CORS: permite localhost (dev) y cualquier dominio *.vercel.app
+  // (la app en producción y sus deploys de preview). Robusto ante cambios de URL.
   app.enableCors({
-    origin: ["https://rewear-app-xi.vercel.app", "http://localhost:3000"],
+    origin: (origin, cb) => {
+      const ok =
+        !origin || // requests sin origin (curl, server-to-server)
+        /^http:\/\/localhost(:\d+)?$/.test(origin) ||
+        /\.vercel\.app$/.test(origin);
+      cb(null, ok);
+    },
     credentials: true,
   });
 

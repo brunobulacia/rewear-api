@@ -14,7 +14,12 @@ async function bootstrap() {
     app.setGlobalPrefix("api");
     app.useGlobalPipes(new common_1.ValidationPipe({ whitelist: true, transform: true }));
     app.enableCors({
-        origin: ["https://rewear-app-xi.vercel.app", "http://localhost:3000"],
+        origin: (origin, cb) => {
+            const ok = !origin ||
+                /^http:\/\/localhost(:\d+)?$/.test(origin) ||
+                /\.vercel\.app$/.test(origin);
+            cb(null, ok);
+        },
         credentials: true,
     });
     const port = process.env.PORT || 4000;
