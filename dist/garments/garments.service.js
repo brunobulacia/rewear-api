@@ -62,7 +62,10 @@ let GarmentsService = class GarmentsService {
         };
     }
     async findAll(dto) {
-        const { marca, talla, categoria, precioMin, precioMax, q, page = 1, limit = 12 } = dto;
+        const { marca, talla, categoria, precioMin, precioMax, q, sort = 'recent', page = 1, limit = 12 } = dto;
+        const orderBy = sort === 'price_asc' ? { precio: 'asc' }
+            : sort === 'price_desc' ? { precio: 'desc' }
+                : { createdAt: 'desc' };
         const where = {
             estado: 'VERIFIED',
             ...(marca && { marca: { contains: marca, mode: 'insensitive' } }),
@@ -87,7 +90,7 @@ let GarmentsService = class GarmentsService {
                 where,
                 skip: (page - 1) * limit,
                 take: limit,
-                orderBy: { createdAt: 'desc' },
+                orderBy,
                 select: {
                     id: true,
                     titulo: true,
@@ -129,7 +132,25 @@ let GarmentsService = class GarmentsService {
         });
         if (!garment)
             throw new common_1.NotFoundException('Prenda no encontrada');
-        return garment;
+        const [agg, salesCount] = await Promise.all([
+            this.prisma.rating.aggregate({
+                where: { toUserId: garment.sellerId },
+                _avg: { score: true },
+                _count: true,
+            }),
+            this.prisma.transaction.count({
+                where: { sellerId: garment.sellerId, status: 'COMPLETED' },
+            }),
+        ]);
+        return {
+            ...garment,
+            seller: {
+                ...garment.seller,
+                ratingAvg: agg._avg.score,
+                ratingCount: agg._count,
+                salesCount,
+            },
+        };
     }
     async update(id, sellerId, dto) {
         const garment = await this.prisma.garment.findUnique({ where: { id } });

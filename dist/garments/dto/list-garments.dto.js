@@ -55,6 +55,11 @@ __decorate([
 ], ListGarmentsDto.prototype, "q", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['recent', 'price_asc', 'price_desc']),
+    __metadata("design:type", String)
+], ListGarmentsDto.prototype, "sort", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.Min)(1),

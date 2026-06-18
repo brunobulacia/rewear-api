@@ -3,6 +3,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 export declare class UsersService {
     private prisma;
     constructor(prisma: PrismaService);
+    private getReputation;
     getProfile(userId: string): Promise<{
         id: string;
         walletAddress: string;
@@ -25,6 +26,9 @@ export declare class UsersService {
         updatedAt: Date;
     }>;
     getPublicProfileById(userId: string): Promise<{
+        ratingAvg: number;
+        ratingCount: number;
+        salesCount: number;
         id: string;
         walletAddress: string;
         nombre: string;
@@ -41,6 +45,9 @@ export declare class UsersService {
         }[];
     }>;
     getPublicProfile(walletAddress: string): Promise<{
+        ratingAvg: number;
+        ratingCount: number;
+        salesCount: number;
         id: string;
         walletAddress: string;
         nombre: string;

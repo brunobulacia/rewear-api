@@ -12,6 +12,11 @@ export class OpenDisputeDto {
   @IsString()
   @IsNotEmpty()
   txHash: string;
+
+  /** Motivo que el comprador describe al abrir la disputa */
+  @IsOptional()
+  @IsString()
+  reason?: string;
 }
 
 export class ResolveDisputeDto {

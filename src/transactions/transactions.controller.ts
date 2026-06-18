@@ -77,6 +77,20 @@ export class TransactionsController {
   }
 
   /**
+   * PATCH /transactions/:id/cancel
+   * Comprador cancela una compra pendiente: tras firmar openDispute on-chain,
+   * la plataforma auto-reembolsa y la prenda vuelve a estar disponible.
+   */
+  @Patch(':id/cancel')
+  cancelPurchase(
+    @Param('id') id: string,
+    @Body() dto: OpenDisputeDto,
+    @CurrentUser() user: { userId: string },
+  ) {
+    return this.service.cancelPurchase(id, dto, user.userId);
+  }
+
+  /**
    * PATCH /transactions/:id/resolve
    * Admin resuelve la disputa (llamar solo desde el panel de administración).
    */

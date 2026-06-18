@@ -6,6 +6,25 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
+  /** Reputación agregada de un vendedor: promedio de estrellas, nº de reseñas y ventas concretadas. */
+  private async getReputation(userId: string) {
+    const [agg, salesCount] = await Promise.all([
+      this.prisma.rating.aggregate({
+        where: { toUserId: userId },
+        _avg: { score: true },
+        _count: true,
+      }),
+      this.prisma.transaction.count({
+        where: { sellerId: userId, status: 'COMPLETED' },
+      }),
+    ]);
+    return {
+      ratingAvg: agg._avg.score,   // null si no tiene reseñas
+      ratingCount: agg._count,
+      salesCount,
+    };
+  }
+
   async getProfile(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -63,7 +82,7 @@ export class UsersService {
       },
     });
     if (!user) throw new NotFoundException('Usuario no encontrado');
-    return user;
+    return { ...user, ...(await this.getReputation(user.id)) };
   }
 
   async getPublicProfile(walletAddress: string) {
@@ -93,6 +112,6 @@ export class UsersService {
     });
 
     if (!user) throw new NotFoundException('Usuario no encontrado');
-    return user;
+    return { ...user, ...(await this.getReputation(user.id)) };
   }
 }

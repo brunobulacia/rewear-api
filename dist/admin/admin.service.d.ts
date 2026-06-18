@@ -14,6 +14,16 @@ export declare class AdminService {
     }>;
     getTransactions(limit?: number): Promise<{
         amountMatic: number;
+        buyer: {
+            id: string;
+            walletAddress: string;
+            nombre: string;
+        };
+        seller: {
+            id: string;
+            walletAddress: string;
+            nombre: string;
+        };
         garment: {
             id: string;
             titulo: string;
@@ -25,63 +35,53 @@ export declare class AdminService {
             status: import(".prisma/client").$Enums.DisputeStatus;
             reason: string;
         }[];
-        seller: {
-            id: string;
-            walletAddress: string;
-            nombre: string;
-        };
-        buyer: {
-            id: string;
-            walletAddress: string;
-            nombre: string;
-        };
         id: string;
+        escrowTxHash: string | null;
+        escrowTradeId: string | null;
+        status: import(".prisma/client").$Enums.TransactionStatus;
         createdAt: Date;
         updatedAt: Date;
+        buyerId: string;
         sellerId: string;
         garmentId: string;
-        escrowTradeId: string | null;
-        escrowTxHash: string | null;
-        buyerId: string;
-        status: import(".prisma/client").$Enums.TransactionStatus;
     }[]>;
     getDisputes(): Promise<({
         transaction: {
-            garment: {
+            buyer: {
                 id: string;
-                titulo: string;
-                imagenes: string[];
+                walletAddress: string;
+                nombre: string;
             };
             seller: {
                 id: string;
                 walletAddress: string;
                 nombre: string;
             };
-            buyer: {
+            garment: {
                 id: string;
-                walletAddress: string;
-                nombre: string;
+                titulo: string;
+                imagenes: string[];
             };
         } & {
             id: string;
+            amount: number;
+            escrowTxHash: string | null;
+            escrowTradeId: string | null;
+            status: import(".prisma/client").$Enums.TransactionStatus;
             createdAt: Date;
             updatedAt: Date;
+            buyerId: string;
             sellerId: string;
             garmentId: string;
-            amount: number;
-            escrowTradeId: string | null;
-            escrowTxHash: string | null;
-            buyerId: string;
-            status: import(".prisma/client").$Enums.TransactionStatus;
         };
     } & {
         id: string;
-        createdAt: Date;
         status: import(".prisma/client").$Enums.DisputeStatus;
-        reason: string;
-        resolution: string | null;
+        createdAt: Date;
         transactionId: string;
         openedById: string;
+        reason: string;
+        resolution: string | null;
     })[]>;
     resolveDispute(transactionId: string, buyerWins: boolean): Promise<{
         ok: boolean;

@@ -5,6 +5,7 @@ export declare class ListGarmentsDto {
     precioMin?: number;
     precioMax?: number;
     q?: string;
+    sort?: 'recent' | 'price_asc' | 'price_desc';
     page?: number;
     limit?: number;
 }

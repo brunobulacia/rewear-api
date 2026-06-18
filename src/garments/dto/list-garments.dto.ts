@@ -31,6 +31,10 @@ export class ListGarmentsDto {
   q?: string;
 
   @IsOptional()
+  @IsIn(['recent', 'price_asc', 'price_desc'])
+  sort?: 'recent' | 'price_asc' | 'price_desc';
+
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(1)

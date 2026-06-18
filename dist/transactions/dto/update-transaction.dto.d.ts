@@ -3,6 +3,7 @@ export declare class ConfirmDeliveryDto {
 }
 export declare class OpenDisputeDto {
     txHash: string;
+    reason?: string;
 }
 export declare class ResolveDisputeDto {
     buyerWins: boolean;

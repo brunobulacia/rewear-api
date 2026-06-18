@@ -29,6 +29,9 @@ export declare class UsersController {
         updatedAt: Date;
     }>;
     getPublicProfile(address: string): Promise<{
+        ratingAvg: number;
+        ratingCount: number;
+        salesCount: number;
         id: string;
         walletAddress: string;
         nombre: string;
@@ -45,6 +48,9 @@ export declare class UsersController {
         }[];
     }>;
     getProfileById(id: string): Promise<{
+        ratingAvg: number;
+        ratingCount: number;
+        salesCount: number;
         id: string;
         walletAddress: string;
         nombre: string;

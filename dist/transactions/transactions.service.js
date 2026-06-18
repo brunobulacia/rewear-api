@@ -92,7 +92,7 @@ let TransactionsService = TransactionsService_1 = class TransactionsService {
             data: {
                 transactionId,
                 openedById: userId,
-                reason: 'Disputa abierta por el comprador',
+                reason: dto.reason?.trim() || 'Disputa abierta por el comprador',
                 status: 'OPEN',
             },
         });
@@ -102,6 +102,35 @@ let TransactionsService = TransactionsService_1 = class TransactionsService {
             include: { buyer: true, seller: true, garment: true },
         });
         this.logger.log(`Disputa abierta en tx ${transactionId}`);
+        return updated;
+    }
+    async cancelPurchase(transactionId, dto, userId) {
+        const tx = await this.getOrThrow(transactionId);
+        if (tx.buyerId !== userId)
+            throw new common_1.ForbiddenException('Solo el comprador puede cancelar');
+        if (tx.status !== 'CONFIRMED') {
+            throw new common_1.BadRequestException('Solo se puede cancelar una compra pendiente de confirmación');
+        }
+        if (tx.escrowTradeId) {
+            const ok = await this.blockchain.resolveDispute(tx.escrowTradeId, true);
+            if (!ok) {
+                throw new common_1.BadRequestException('No se pudo reembolsar on-chain. Tenés que firmar la cancelación en tu billetera primero.');
+            }
+        }
+        await this.prisma.dispute.updateMany({
+            where: { transactionId, status: 'OPEN' },
+            data: { status: 'RESOLVED', resolution: 'Compra cancelada por el comprador' },
+        });
+        const updated = await this.prisma.transaction.update({
+            where: { id: transactionId },
+            data: { status: 'REFUNDED' },
+            include: { buyer: true, seller: true, garment: true },
+        });
+        await this.prisma.garment.update({
+            where: { id: tx.garmentId },
+            data: { estado: 'VERIFIED' },
+        });
+        this.logger.log(`Compra cancelada y reembolsada: tx ${transactionId}`);
         return updated;
     }
     async resolveDispute(transactionId, dto) {

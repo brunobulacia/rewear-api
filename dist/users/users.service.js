@@ -16,6 +16,23 @@ let UsersService = class UsersService {
     constructor(prisma) {
         this.prisma = prisma;
     }
+    async getReputation(userId) {
+        const [agg, salesCount] = await Promise.all([
+            this.prisma.rating.aggregate({
+                where: { toUserId: userId },
+                _avg: { score: true },
+                _count: true,
+            }),
+            this.prisma.transaction.count({
+                where: { sellerId: userId, status: 'COMPLETED' },
+            }),
+        ]);
+        return {
+            ratingAvg: agg._avg.score,
+            ratingCount: agg._count,
+            salesCount,
+        };
+    }
     async getProfile(userId) {
         const user = await this.prisma.user.findUnique({
             where: { id: userId },
@@ -72,7 +89,7 @@ let UsersService = class UsersService {
         });
         if (!user)
             throw new common_1.NotFoundException('Usuario no encontrado');
-        return user;
+        return { ...user, ...(await this.getReputation(user.id)) };
     }
     async getPublicProfile(walletAddress) {
         const user = await this.prisma.user.findUnique({
@@ -101,7 +118,7 @@ let UsersService = class UsersService {
         });
         if (!user)
             throw new common_1.NotFoundException('Usuario no encontrado');
-        return user;
+        return { ...user, ...(await this.getReputation(user.id)) };
     }
 };
 exports.UsersService = UsersService;

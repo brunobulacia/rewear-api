@@ -68,7 +68,12 @@ export class GarmentsService {
   }
 
   async findAll(dto: ListGarmentsDto) {
-    const { marca, talla, categoria, precioMin, precioMax, q, page = 1, limit = 12 } = dto;
+    const { marca, talla, categoria, precioMin, precioMax, q, sort = 'recent', page = 1, limit = 12 } = dto;
+
+    const orderBy: Prisma.GarmentOrderByWithRelationInput =
+      sort === 'price_asc'    ? { precio: 'asc' }
+      : sort === 'price_desc' ? { precio: 'desc' }
+      : { createdAt: 'desc' };
 
     const where: Prisma.GarmentWhereInput = {
       estado: 'VERIFIED',
@@ -95,7 +100,7 @@ export class GarmentsService {
         where,
         skip: (page - 1) * limit,
         take: limit,
-        orderBy: { createdAt: 'desc' },
+        orderBy,
         select: {
           id: true,
           titulo: true,
@@ -139,7 +144,28 @@ export class GarmentsService {
     });
 
     if (!garment) throw new NotFoundException('Prenda no encontrada');
-    return garment;
+
+    // Reputación del vendedor (promedio de estrellas, nº de reseñas y ventas).
+    const [agg, salesCount] = await Promise.all([
+      this.prisma.rating.aggregate({
+        where: { toUserId: garment.sellerId },
+        _avg: { score: true },
+        _count: true,
+      }),
+      this.prisma.transaction.count({
+        where: { sellerId: garment.sellerId, status: 'COMPLETED' },
+      }),
+    ]);
+
+    return {
+      ...garment,
+      seller: {
+        ...garment.seller,
+        ratingAvg: agg._avg.score,
+        ratingCount: agg._count,
+        salesCount,
+      },
+    };
   }
 
   /**

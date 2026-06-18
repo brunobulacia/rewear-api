@@ -116,7 +116,7 @@ export class TransactionsService {
       data: {
         transactionId,
         openedById: userId,
-        reason: 'Disputa abierta por el comprador',
+        reason: dto.reason?.trim() || 'Disputa abierta por el comprador',
         status: 'OPEN',
       },
     });
@@ -128,6 +128,53 @@ export class TransactionsService {
     });
 
     this.logger.log(`Disputa abierta en tx ${transactionId}`);
+    return updated;
+  }
+
+  /**
+   * Cancela una compra pendiente (iniciada por el comprador).
+   * El comprador ya firmó openDispute on-chain (trade en estado DISPUTED);
+   * acá la plataforma resuelve a su favor (reembolso) sin pasar por el admin.
+   * La prenda vuelve a estar disponible.
+   */
+  async cancelPurchase(transactionId: string, dto: OpenDisputeDto, userId: string) {
+    const tx = await this.getOrThrow(transactionId);
+
+    if (tx.buyerId !== userId) throw new ForbiddenException('Solo el comprador puede cancelar');
+    if (tx.status !== 'CONFIRMED') {
+      throw new BadRequestException('Solo se puede cancelar una compra pendiente de confirmación');
+    }
+
+    // Reembolso on-chain PRIMERO. Requiere que el comprador haya firmado
+    // openDispute (trade DISPUTED en el contrato). Si falla, no tocamos la DB.
+    if (tx.escrowTradeId) {
+      const ok = await this.blockchain.resolveDispute(tx.escrowTradeId, true);
+      if (!ok) {
+        throw new BadRequestException(
+          'No se pudo reembolsar on-chain. Tenés que firmar la cancelación en tu billetera primero.',
+        );
+      }
+    }
+
+    // Cerrar cualquier disputa abierta asociada (por si existiera)
+    await this.prisma.dispute.updateMany({
+      where: { transactionId, status: 'OPEN' },
+      data: { status: 'RESOLVED', resolution: 'Compra cancelada por el comprador' },
+    });
+
+    const updated = await this.prisma.transaction.update({
+      where: { id: transactionId },
+      data: { status: 'REFUNDED' },
+      include: { buyer: true, seller: true, garment: true },
+    });
+
+    // La prenda vuelve a estar disponible en el catálogo
+    await this.prisma.garment.update({
+      where: { id: tx.garmentId },
+      data: { estado: 'VERIFIED' },
+    });
+
+    this.logger.log(`Compra cancelada y reembolsada: tx ${transactionId}`);
     return updated;
   }
 

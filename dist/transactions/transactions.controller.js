@@ -38,6 +38,9 @@ let TransactionsController = class TransactionsController {
     openDispute(id, dto, user) {
         return this.service.openDispute(id, dto, user.userId);
     }
+    cancelPurchase(id, dto, user) {
+        return this.service.cancelPurchase(id, dto, user.userId);
+    }
     resolveDispute(id, dto) {
         return this.service.resolveDispute(id, dto);
     }
@@ -84,6 +87,15 @@ __decorate([
     __metadata("design:paramtypes", [String, update_transaction_dto_1.OpenDisputeDto, Object]),
     __metadata("design:returntype", void 0)
 ], TransactionsController.prototype, "openDispute", null);
+__decorate([
+    (0, common_1.Patch)(':id/cancel'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, update_transaction_dto_1.OpenDisputeDto, Object]),
+    __metadata("design:returntype", void 0)
+], TransactionsController.prototype, "cancelPurchase", null);
 __decorate([
     (0, common_1.Patch)(':id/resolve'),
     __param(0, (0, common_1.Param)('id')),
