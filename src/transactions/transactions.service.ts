@@ -168,10 +168,13 @@ export class TransactionsService {
       include: { buyer: true, seller: true, garment: true },
     });
 
-    // La prenda vuelve a estar disponible en el catálogo
+    // La prenda se retira del catálogo: el contrato escrow mantiene un único
+    // trade por garmentId, por lo que una prenda con un trade terminal
+    // (reembolsada) ya no puede volver a comprarse on-chain. La marcamos como
+    // no disponible para evitar intentos de compra que el contrato revertiría.
     await this.prisma.garment.update({
       where: { id: tx.garmentId },
-      data: { estado: 'VERIFIED' },
+      data: { estado: 'SOLD' },
     });
 
     this.logger.log(`Compra cancelada y reembolsada: tx ${transactionId}`);
@@ -229,10 +232,13 @@ export class TransactionsService {
           .catch((err) => this.logger.error('Error transfiriendo NFT en resolución', err));
       }
     } else {
-      // Reembolso: volver la prenda a disponible
+      // Reembolso al comprador: la prenda se retira del catálogo. El contrato
+      // escrow mantiene un único trade por garmentId, así que una prenda con un
+      // trade terminal (reembolsada) ya no puede volver a comprarse on-chain;
+      // marcarla como disponible llevaría a compras que el contrato revertiría.
       await this.prisma.garment.update({
         where: { id: tx.garmentId },
-        data: { estado: 'VERIFIED' },
+        data: { estado: 'SOLD' },
       });
     }
 
