@@ -158,28 +158,45 @@ export class BlockchainService implements OnModuleInit {
       timestamp: number;
     }>
   > {
-    if (!this.nftContract || !this.provider) return [];
-    const nft = this.nftContract;
-    const provider = this.provider;
+    if (!this.nftContract) return [];
+
+    // Proveedor dedicado para eth_getLogs. El RPC principal (publicnode) no es
+    // confiable para getLogs (devuelve errores), así que el historial usa un RPC
+    // que sí lo soporta —configurable vía SEPOLIA_LOGS_RPC; por defecto, el
+    // gateway de Tenderly—. Las transacciones siguen usando el RPC principal.
+    const logsRpc = process.env.SEPOLIA_LOGS_RPC || 'https://sepolia.gateway.tenderly.co';
+    const provider = new ethers.JsonRpcProvider(logsRpc);
+    const nft = this.nftContract.connect(provider) as ethers.Contract;
 
     const latest = await provider.getBlockNumber();
     const WINDOW = 9500; // límite seguro de eth_getLogs por consulta
-    const SPAN = 80000; // ~11 días hacia atrás (cubre todos los NFTs del proyecto)
+    const SPAN = 200000; // ~27 días hacia atrás (cubre todos los NFTs del proyecto)
     const fromStart = Math.max(0, latest - SPAN);
     const filter = (nft.filters as any).Transfer(null, null, BigInt(tokenId));
 
-    const raw: any[] = [];
+    // Construir las ventanas y consultarlas EN PARALELO (mucho más rápido que
+    // de forma secuencial: de varios segundos a menos de uno).
+    const ranges: Array<[number, number]> = [];
     for (let to = latest; to >= fromStart; to -= WINDOW) {
-      const from = Math.max(fromStart, to - WINDOW + 1);
-      try {
-        const found = await nft.queryFilter(filter, from, to);
-        raw.push(...found);
-      } catch (e) {
-        this.logger.warn(`queryFilter falló [${from},${to}] para token ${tokenId}`);
-      }
-      if (from === fromStart) break;
+      ranges.push([Math.max(fromStart, to - WINDOW + 1), to]);
+      if (ranges[ranges.length - 1][0] === fromStart) break;
     }
-
+    // Consultar en lotes pequeños (concurrencia moderada): más rápido que de
+    // forma secuencial, pero sin saturar el RPC gratuito.
+    const raw: any[] = [];
+    const BATCH = 4;
+    for (let i = 0; i < ranges.length; i += BATCH) {
+      const chunk = ranges.slice(i, i + BATCH);
+      const res = await Promise.all(
+        chunk.map(([from, to]) =>
+          nft.queryFilter(filter, from, to).catch(() => {
+            this.logger.warn(`queryFilter falló [${from},${to}] para token ${tokenId}`);
+            return [] as any[];
+          }),
+        ),
+      );
+      raw.push(...res.flat());
+    }
     raw.sort((a, b) => a.blockNumber - b.blockNumber || a.index - b.index);
 
     const tsCache: Record<number, number> = {};
