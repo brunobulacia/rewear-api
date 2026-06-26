@@ -10,8 +10,8 @@ export declare class RatingsService {
     create(dto: CreateRatingDto, fromUserId: string): Promise<{
         id: string;
         createdAt: Date;
-        transactionId: string;
         score: number;
+        transactionId: string;
         comment: string | null;
         fromUserId: string;
         toUserId: string;
@@ -44,8 +44,8 @@ export declare class RatingsService {
         } & {
             id: string;
             createdAt: Date;
-            transactionId: string;
             score: number;
+            transactionId: string;
             comment: string | null;
             fromUserId: string;
             toUserId: string;
@@ -56,8 +56,8 @@ export declare class RatingsService {
     getByTransaction(transactionId: string): Promise<{
         id: string;
         createdAt: Date;
-        transactionId: string;
         score: number;
+        transactionId: string;
         comment: string | null;
         fromUserId: string;
         toUserId: string;

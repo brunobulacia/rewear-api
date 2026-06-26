@@ -7,8 +7,8 @@ export declare class RatingsController {
     }): Promise<{
         id: string;
         createdAt: Date;
-        transactionId: string;
         score: number;
+        transactionId: string;
         comment: string | null;
         fromUserId: string;
         toUserId: string;
@@ -41,8 +41,8 @@ export declare class RatingsController {
         } & {
             id: string;
             createdAt: Date;
-            transactionId: string;
             score: number;
+            transactionId: string;
             comment: string | null;
             fromUserId: string;
             toUserId: string;
@@ -53,8 +53,8 @@ export declare class RatingsController {
     getByTransaction(transactionId: string): Promise<{
         id: string;
         createdAt: Date;
-        transactionId: string;
         score: number;
+        transactionId: string;
         comment: string | null;
         fromUserId: string;
         toUserId: string;

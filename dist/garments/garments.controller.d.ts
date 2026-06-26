@@ -24,6 +24,8 @@ export declare class GarmentsController {
         };
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         titulo: string;
         descripcion: string | null;
         marca: string | null;
@@ -32,13 +34,11 @@ export declare class GarmentsController {
         estilo: string | null;
         precio: number;
         estado: import(".prisma/client").$Enums.GarmentStatus;
+        sellerId: string;
         imagenes: string[];
         imageHash: string | null;
         nftTokenId: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        sellerId: string;
     }>;
     verifyImage(files: Express.Multer.File[]): Promise<{
         registered: boolean;
@@ -73,6 +73,8 @@ export declare class GarmentsController {
         };
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         titulo: string;
         descripcion: string | null;
         marca: string | null;
@@ -81,13 +83,11 @@ export declare class GarmentsController {
         estilo: string | null;
         precio: number;
         estado: import(".prisma/client").$Enums.GarmentStatus;
+        sellerId: string;
         imagenes: string[];
         imageHash: string | null;
         nftTokenId: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        sellerId: string;
     })[]>;
     update(id: string, dto: UpdateGarmentDto, user: {
         userId: string;
@@ -98,6 +98,8 @@ export declare class GarmentsController {
         };
     } & {
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         titulo: string;
         descripcion: string | null;
         marca: string | null;
@@ -106,16 +108,18 @@ export declare class GarmentsController {
         estilo: string | null;
         precio: number;
         estado: import(".prisma/client").$Enums.GarmentStatus;
+        sellerId: string;
         imagenes: string[];
         imageHash: string | null;
         nftTokenId: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        sellerId: string;
     }>;
     findAll(dto: ListGarmentsDto): Promise<{
         data: {
+            verification: {
+                authenticityPct: number;
+                wearLevel: string;
+            };
             id: string;
             titulo: string;
             marca: string;
@@ -129,10 +133,6 @@ export declare class GarmentsController {
                 walletAddress: string;
                 nombre: string;
                 avatar: string;
-            };
-            verification: {
-                authenticityPct: number;
-                wearLevel: string;
             };
         }[];
         meta: {
@@ -196,6 +196,8 @@ export declare class GarmentsController {
             dictamen: string | null;
         };
         id: string;
+        createdAt: Date;
+        updatedAt: Date;
         titulo: string;
         descripcion: string | null;
         marca: string | null;
@@ -204,12 +206,10 @@ export declare class GarmentsController {
         estilo: string | null;
         precio: number;
         estado: import(".prisma/client").$Enums.GarmentStatus;
+        sellerId: string;
         imagenes: string[];
         imageHash: string | null;
         nftTokenId: string | null;
         verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
-        createdAt: Date;
-        updatedAt: Date;
-        sellerId: string;
     }>;
 }

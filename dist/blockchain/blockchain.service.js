@@ -132,27 +132,31 @@ let BlockchainService = BlockchainService_1 = class BlockchainService {
         }
     }
     async getTokenHistory(tokenId) {
-        if (!this.nftContract || !this.provider)
+        if (!this.nftContract)
             return [];
-        const nft = this.nftContract;
-        const provider = this.provider;
+        const logsRpc = process.env.SEPOLIA_LOGS_RPC || 'https://sepolia.gateway.tenderly.co';
+        const provider = new ethers_1.ethers.JsonRpcProvider(logsRpc);
+        const nft = this.nftContract.connect(provider);
         const latest = await provider.getBlockNumber();
         const WINDOW = 9500;
-        const SPAN = 80000;
+        const SPAN = 200000;
         const fromStart = Math.max(0, latest - SPAN);
         const filter = nft.filters.Transfer(null, null, BigInt(tokenId));
-        const raw = [];
+        const ranges = [];
         for (let to = latest; to >= fromStart; to -= WINDOW) {
-            const from = Math.max(fromStart, to - WINDOW + 1);
-            try {
-                const found = await nft.queryFilter(filter, from, to);
-                raw.push(...found);
-            }
-            catch (e) {
-                this.logger.warn(`queryFilter falló [${from},${to}] para token ${tokenId}`);
-            }
-            if (from === fromStart)
+            ranges.push([Math.max(fromStart, to - WINDOW + 1), to]);
+            if (ranges[ranges.length - 1][0] === fromStart)
                 break;
+        }
+        const raw = [];
+        const BATCH = 4;
+        for (let i = 0; i < ranges.length; i += BATCH) {
+            const chunk = ranges.slice(i, i + BATCH);
+            const res = await Promise.all(chunk.map(([from, to]) => nft.queryFilter(filter, from, to).catch(() => {
+                this.logger.warn(`queryFilter falló [${from},${to}] para token ${tokenId}`);
+                return [];
+            })));
+            raw.push(...res.flat());
         }
         raw.sort((a, b) => a.blockNumber - b.blockNumber || a.index - b.index);
         const tsCache = {};

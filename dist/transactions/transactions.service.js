@@ -128,7 +128,7 @@ let TransactionsService = TransactionsService_1 = class TransactionsService {
         });
         await this.prisma.garment.update({
             where: { id: tx.garmentId },
-            data: { estado: 'VERIFIED' },
+            data: { estado: 'SOLD' },
         });
         this.logger.log(`Compra cancelada y reembolsada: tx ${transactionId}`);
         return updated;
@@ -171,7 +171,7 @@ let TransactionsService = TransactionsService_1 = class TransactionsService {
         else {
             await this.prisma.garment.update({
                 where: { id: tx.garmentId },
-                data: { estado: 'VERIFIED' },
+                data: { estado: 'SOLD' },
             });
         }
         this.logger.log(`Disputa resuelta en tx ${transactionId} — buyerWins: ${dto.buyerWins}`);

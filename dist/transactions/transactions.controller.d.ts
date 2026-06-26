@@ -7,33 +7,10 @@ export declare class TransactionsController {
     create(dto: CreateTransactionDto, user: {
         userId: string;
     }): Promise<{
-        buyer: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            walletAddress: string;
-            nombre: string | null;
-            email: string | null;
-            ubicacion: string | null;
-            avatar: string | null;
-            rol: import(".prisma/client").$Enums.Role;
-        };
-        seller: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            walletAddress: string;
-            nombre: string | null;
-            email: string | null;
-            ubicacion: string | null;
-            avatar: string | null;
-            rol: import(".prisma/client").$Enums.Role;
-        };
         garment: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            sellerId: string;
             titulo: string;
             descripcion: string | null;
             marca: string | null;
@@ -42,22 +19,45 @@ export declare class TransactionsController {
             estilo: string | null;
             precio: number;
             estado: import(".prisma/client").$Enums.GarmentStatus;
+            sellerId: string;
             imagenes: string[];
             imageHash: string | null;
             nftTokenId: string | null;
             verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         };
+        seller: {
+            id: string;
+            walletAddress: string;
+            nombre: string | null;
+            email: string | null;
+            ubicacion: string | null;
+            avatar: string | null;
+            rol: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        buyer: {
+            id: string;
+            walletAddress: string;
+            nombre: string | null;
+            email: string | null;
+            ubicacion: string | null;
+            avatar: string | null;
+            rol: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
+        };
     } & {
         id: string;
-        amount: number;
-        escrowTxHash: string | null;
-        escrowTradeId: string | null;
-        status: import(".prisma/client").$Enums.TransactionStatus;
         createdAt: Date;
         updatedAt: Date;
-        buyerId: string;
         sellerId: string;
         garmentId: string;
+        amount: number;
+        escrowTradeId: string | null;
+        escrowTxHash: string | null;
+        buyerId: string;
+        status: import(".prisma/client").$Enums.TransactionStatus;
     }>;
     findMine(user: {
         userId: string;
@@ -65,22 +65,12 @@ export declare class TransactionsController {
         amountMatic: number;
         dispute: {
             id: string;
-            status: import(".prisma/client").$Enums.DisputeStatus;
             createdAt: Date;
+            reason: string;
+            status: import(".prisma/client").$Enums.DisputeStatus;
+            resolution: string | null;
             transactionId: string;
             openedById: string;
-            reason: string;
-            resolution: string | null;
-        };
-        buyer: {
-            id: string;
-            walletAddress: string;
-            nombre: string;
-        };
-        seller: {
-            id: string;
-            walletAddress: string;
-            nombre: string;
         };
         garment: {
             id: string;
@@ -90,46 +80,33 @@ export declare class TransactionsController {
             precio: number;
             imagenes: string[];
         };
+        seller: {
+            id: string;
+            walletAddress: string;
+            nombre: string;
+        };
+        buyer: {
+            id: string;
+            walletAddress: string;
+            nombre: string;
+        };
         id: string;
-        escrowTxHash: string | null;
-        escrowTradeId: string | null;
-        status: import(".prisma/client").$Enums.TransactionStatus;
         createdAt: Date;
         updatedAt: Date;
-        buyerId: string;
         sellerId: string;
         garmentId: string;
+        escrowTradeId: string | null;
+        escrowTxHash: string | null;
+        buyerId: string;
+        status: import(".prisma/client").$Enums.TransactionStatus;
     }[]>;
     findOne(id: string, user: {
         userId: string;
     }): Promise<{
-        buyer: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            walletAddress: string;
-            nombre: string | null;
-            email: string | null;
-            ubicacion: string | null;
-            avatar: string | null;
-            rol: import(".prisma/client").$Enums.Role;
-        };
-        seller: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            walletAddress: string;
-            nombre: string | null;
-            email: string | null;
-            ubicacion: string | null;
-            avatar: string | null;
-            rol: import(".prisma/client").$Enums.Role;
-        };
         garment: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            sellerId: string;
             titulo: string;
             descripcion: string | null;
             marca: string | null;
@@ -138,6 +115,7 @@ export declare class TransactionsController {
             estilo: string | null;
             precio: number;
             estado: import(".prisma/client").$Enums.GarmentStatus;
+            sellerId: string;
             imagenes: string[];
             imageHash: string | null;
             nftTokenId: string | null;
@@ -145,55 +123,54 @@ export declare class TransactionsController {
         };
         disputes: {
             id: string;
-            status: import(".prisma/client").$Enums.DisputeStatus;
             createdAt: Date;
+            reason: string;
+            status: import(".prisma/client").$Enums.DisputeStatus;
+            resolution: string | null;
             transactionId: string;
             openedById: string;
-            reason: string;
-            resolution: string | null;
         }[];
+        seller: {
+            id: string;
+            walletAddress: string;
+            nombre: string | null;
+            email: string | null;
+            ubicacion: string | null;
+            avatar: string | null;
+            rol: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        buyer: {
+            id: string;
+            walletAddress: string;
+            nombre: string | null;
+            email: string | null;
+            ubicacion: string | null;
+            avatar: string | null;
+            rol: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
+        };
     } & {
         id: string;
-        amount: number;
-        escrowTxHash: string | null;
-        escrowTradeId: string | null;
-        status: import(".prisma/client").$Enums.TransactionStatus;
         createdAt: Date;
         updatedAt: Date;
-        buyerId: string;
         sellerId: string;
         garmentId: string;
+        amount: number;
+        escrowTradeId: string | null;
+        escrowTxHash: string | null;
+        buyerId: string;
+        status: import(".prisma/client").$Enums.TransactionStatus;
     }>;
     confirmDelivery(id: string, dto: ConfirmDeliveryDto, user: {
         userId: string;
     }): Promise<{
-        buyer: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            walletAddress: string;
-            nombre: string | null;
-            email: string | null;
-            ubicacion: string | null;
-            avatar: string | null;
-            rol: import(".prisma/client").$Enums.Role;
-        };
-        seller: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            walletAddress: string;
-            nombre: string | null;
-            email: string | null;
-            ubicacion: string | null;
-            avatar: string | null;
-            rol: import(".prisma/client").$Enums.Role;
-        };
         garment: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            sellerId: string;
             titulo: string;
             descripcion: string | null;
             marca: string | null;
@@ -202,53 +179,53 @@ export declare class TransactionsController {
             estilo: string | null;
             precio: number;
             estado: import(".prisma/client").$Enums.GarmentStatus;
+            sellerId: string;
             imagenes: string[];
             imageHash: string | null;
             nftTokenId: string | null;
             verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         };
+        seller: {
+            id: string;
+            walletAddress: string;
+            nombre: string | null;
+            email: string | null;
+            ubicacion: string | null;
+            avatar: string | null;
+            rol: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        buyer: {
+            id: string;
+            walletAddress: string;
+            nombre: string | null;
+            email: string | null;
+            ubicacion: string | null;
+            avatar: string | null;
+            rol: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
+        };
     } & {
         id: string;
-        amount: number;
-        escrowTxHash: string | null;
-        escrowTradeId: string | null;
-        status: import(".prisma/client").$Enums.TransactionStatus;
         createdAt: Date;
         updatedAt: Date;
-        buyerId: string;
         sellerId: string;
         garmentId: string;
+        amount: number;
+        escrowTradeId: string | null;
+        escrowTxHash: string | null;
+        buyerId: string;
+        status: import(".prisma/client").$Enums.TransactionStatus;
     }>;
     openDispute(id: string, dto: OpenDisputeDto, user: {
         userId: string;
     }): Promise<{
-        buyer: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            walletAddress: string;
-            nombre: string | null;
-            email: string | null;
-            ubicacion: string | null;
-            avatar: string | null;
-            rol: import(".prisma/client").$Enums.Role;
-        };
-        seller: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            walletAddress: string;
-            nombre: string | null;
-            email: string | null;
-            ubicacion: string | null;
-            avatar: string | null;
-            rol: import(".prisma/client").$Enums.Role;
-        };
         garment: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            sellerId: string;
             titulo: string;
             descripcion: string | null;
             marca: string | null;
@@ -257,53 +234,53 @@ export declare class TransactionsController {
             estilo: string | null;
             precio: number;
             estado: import(".prisma/client").$Enums.GarmentStatus;
+            sellerId: string;
             imagenes: string[];
             imageHash: string | null;
             nftTokenId: string | null;
             verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         };
+        seller: {
+            id: string;
+            walletAddress: string;
+            nombre: string | null;
+            email: string | null;
+            ubicacion: string | null;
+            avatar: string | null;
+            rol: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        buyer: {
+            id: string;
+            walletAddress: string;
+            nombre: string | null;
+            email: string | null;
+            ubicacion: string | null;
+            avatar: string | null;
+            rol: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
+        };
     } & {
         id: string;
-        amount: number;
-        escrowTxHash: string | null;
-        escrowTradeId: string | null;
-        status: import(".prisma/client").$Enums.TransactionStatus;
         createdAt: Date;
         updatedAt: Date;
-        buyerId: string;
         sellerId: string;
         garmentId: string;
+        amount: number;
+        escrowTradeId: string | null;
+        escrowTxHash: string | null;
+        buyerId: string;
+        status: import(".prisma/client").$Enums.TransactionStatus;
     }>;
     cancelPurchase(id: string, dto: OpenDisputeDto, user: {
         userId: string;
     }): Promise<{
-        buyer: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            walletAddress: string;
-            nombre: string | null;
-            email: string | null;
-            ubicacion: string | null;
-            avatar: string | null;
-            rol: import(".prisma/client").$Enums.Role;
-        };
-        seller: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            walletAddress: string;
-            nombre: string | null;
-            email: string | null;
-            ubicacion: string | null;
-            avatar: string | null;
-            rol: import(".prisma/client").$Enums.Role;
-        };
         garment: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            sellerId: string;
             titulo: string;
             descripcion: string | null;
             marca: string | null;
@@ -312,51 +289,51 @@ export declare class TransactionsController {
             estilo: string | null;
             precio: number;
             estado: import(".prisma/client").$Enums.GarmentStatus;
+            sellerId: string;
             imagenes: string[];
             imageHash: string | null;
             nftTokenId: string | null;
             verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         };
+        seller: {
+            id: string;
+            walletAddress: string;
+            nombre: string | null;
+            email: string | null;
+            ubicacion: string | null;
+            avatar: string | null;
+            rol: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        buyer: {
+            id: string;
+            walletAddress: string;
+            nombre: string | null;
+            email: string | null;
+            ubicacion: string | null;
+            avatar: string | null;
+            rol: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
+        };
     } & {
         id: string;
-        amount: number;
-        escrowTxHash: string | null;
-        escrowTradeId: string | null;
-        status: import(".prisma/client").$Enums.TransactionStatus;
         createdAt: Date;
         updatedAt: Date;
-        buyerId: string;
         sellerId: string;
         garmentId: string;
+        amount: number;
+        escrowTradeId: string | null;
+        escrowTxHash: string | null;
+        buyerId: string;
+        status: import(".prisma/client").$Enums.TransactionStatus;
     }>;
     resolveDispute(id: string, dto: ResolveDisputeDto): Promise<{
-        buyer: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            walletAddress: string;
-            nombre: string | null;
-            email: string | null;
-            ubicacion: string | null;
-            avatar: string | null;
-            rol: import(".prisma/client").$Enums.Role;
-        };
-        seller: {
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            walletAddress: string;
-            nombre: string | null;
-            email: string | null;
-            ubicacion: string | null;
-            avatar: string | null;
-            rol: import(".prisma/client").$Enums.Role;
-        };
         garment: {
             id: string;
             createdAt: Date;
             updatedAt: Date;
-            sellerId: string;
             titulo: string;
             descripcion: string | null;
             marca: string | null;
@@ -365,21 +342,44 @@ export declare class TransactionsController {
             estilo: string | null;
             precio: number;
             estado: import(".prisma/client").$Enums.GarmentStatus;
+            sellerId: string;
             imagenes: string[];
             imageHash: string | null;
             nftTokenId: string | null;
             verificationStatus: import(".prisma/client").$Enums.VerificationStatus;
         };
+        seller: {
+            id: string;
+            walletAddress: string;
+            nombre: string | null;
+            email: string | null;
+            ubicacion: string | null;
+            avatar: string | null;
+            rol: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
+        };
+        buyer: {
+            id: string;
+            walletAddress: string;
+            nombre: string | null;
+            email: string | null;
+            ubicacion: string | null;
+            avatar: string | null;
+            rol: import(".prisma/client").$Enums.Role;
+            createdAt: Date;
+            updatedAt: Date;
+        };
     } & {
         id: string;
-        amount: number;
-        escrowTxHash: string | null;
-        escrowTradeId: string | null;
-        status: import(".prisma/client").$Enums.TransactionStatus;
         createdAt: Date;
         updatedAt: Date;
-        buyerId: string;
         sellerId: string;
         garmentId: string;
+        amount: number;
+        escrowTradeId: string | null;
+        escrowTxHash: string | null;
+        buyerId: string;
+        status: import(".prisma/client").$Enums.TransactionStatus;
     }>;
 }
