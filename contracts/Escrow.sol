@@ -27,6 +27,10 @@ contract ReWearEscrow is Ownable, ReentrancyGuard {
     uint256 public commissionBps = 300;          // 3 % en basis points (la asume el vendedor)
     uint256 public constant DELIVERY_TIMEOUT = 7 days;
 
+    // Billetera que recibe automáticamente las comisiones en cada venta ("el jefe").
+    // Arranca igual al owner; se puede reapuntar con setFeeRecipient().
+    address public feeRecipient;
+
     enum State { FUNDED, COMPLETED, DISPUTED, REFUNDED }
 
     struct Trade {
@@ -55,8 +59,11 @@ contract ReWearEscrow is Ownable, ReentrancyGuard {
     event TradeDisputed(bytes32 indexed tradeId, address by);
     event TradeRefunded(bytes32 indexed tradeId);
     event DisputeResolved(bytes32 indexed tradeId, bool buyerWins);
+    event FeeRecipientUpdated(address indexed newRecipient);
 
-    constructor(address initialOwner) Ownable(initialOwner) {}
+    constructor(address initialOwner) Ownable(initialOwner) {
+        feeRecipient = initialOwner;
+    }
 
     // ─────────────────────────────────────────────────────────────
     //  Acciones del comprador
@@ -179,6 +186,15 @@ contract ReWearEscrow is Ownable, ReentrancyGuard {
         commissionBps = newBps;
     }
 
+    /**
+     * @dev Reapunta la billetera que recibe las comisiones ("el jefe").
+     */
+    function setFeeRecipient(address newRecipient) external onlyOwner {
+        require(newRecipient != address(0), "Escrow: recipient invalido");
+        feeRecipient = newRecipient;
+        emit FeeRecipientUpdated(newRecipient);
+    }
+
     // ─────────────────────────────────────────────────────────────
     //  Vistas
     // ─────────────────────────────────────────────────────────────
@@ -209,6 +225,12 @@ contract ReWearEscrow is Ownable, ReentrancyGuard {
 
         (bool ok,) = trade.seller.call{value: sellerAmount}("");
         require(ok, "Escrow: pago al vendedor fallido");
+
+        // La comisión se transfiere automáticamente al jefe en la misma tx.
+        if (commission > 0) {
+            (bool okFee,) = payable(feeRecipient).call{value: commission}("");
+            require(okFee, "Escrow: pago de comision fallido");
+        }
 
         emit TradeCompleted(tradeId, sellerAmount, commission);
     }
