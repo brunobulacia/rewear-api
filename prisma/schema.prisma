@@ -50,9 +50,12 @@ model Garment {
   titulo             String
   descripcion        String?
   marca              String?
+  modelo             String?
+  colorway           String?
   talla              String?
   categoria          String?
   estilo             String?
+  condicion          String?
   precio             Float
   estado             GarmentStatus      @default(PENDING)
   sellerId           String             @map("seller_id")

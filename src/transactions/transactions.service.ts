@@ -27,19 +27,19 @@ export class TransactionsService {
       where: { id: dto.garmentId },
     });
 
-    if (!garment) throw new NotFoundException('Prenda no encontrada');
+    if (!garment) throw new NotFoundException('Producto no encontrado');
     if (garment.estado !== 'VERIFIED') {
-      throw new BadRequestException('La prenda no está verificada o ya fue vendida');
+      throw new BadRequestException('El producto no está verificado o ya fue vendido');
     }
     if (garment.sellerId === buyerId) {
-      throw new BadRequestException('No podés comprar tu propia prenda');
+      throw new BadRequestException('No podés comprar tu propio producto');
     }
 
     // Prevenir doble compra
     const existing = await this.prisma.transaction.findFirst({
       where: { garmentId: dto.garmentId, status: { in: ['PENDING', 'CONFIRMED'] } },
     });
-    if (existing) throw new BadRequestException('La prenda ya tiene una transacción activa');
+    if (existing) throw new BadRequestException('El producto ya tiene una transacción activa');
 
     const transaction = await this.prisma.transaction.create({
       data: {

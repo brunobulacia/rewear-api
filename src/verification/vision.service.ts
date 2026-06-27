@@ -3,11 +3,12 @@ import { ConfigService } from '@nestjs/config';
 import Anthropic from '@anthropic-ai/sdk';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Categoria, CATEGORIA_FOCO_IA, CATEGORIA_LABEL } from '../garments/categoria';
 
 export interface VisionResult {
-  /** true solo si la imagen es una prenda de vestir / calzado / accesorio usable */
-  isClothing: boolean;
-  /** etiqueta de la prenda detectada (ej "Chaqueta de cuero") o motivo del rechazo */
+  /** true solo si la imagen es un producto de marca revendible (zapatillas, prenda, gorra, mochila) */
+  isValidProduct: boolean;
+  /** etiqueta del producto detectado (ej "Nike Air Jordan 1") o motivo del rechazo */
   label: string;
   /** estado de conservación estimado por la IA */
   wearLevel: 'Excelente' | 'Muy bueno' | 'Bueno' | 'Regular' | 'Desconocido';
@@ -27,8 +28,10 @@ const MIME: Record<string, 'image/jpeg' | 'image/png' | 'image/webp' | 'image/gi
 
 /**
  * Visión por computadora con Claude: clasifica una imagen para garantizar que
- * sea una prenda de vestir antes de aprobarla y mintear su NFT. Si la API no
- * está configurada, hace fail-open (acepta) para no bloquear el flujo en dev.
+ * sea un producto de marca revendible (zapatillas, prenda, gorra o mochila)
+ * antes de aprobarlo y mintear su NFT. El criterio de autenticidad/condición se
+ * ajusta según la categoría declarada. Si la API no está configurada, hace
+ * fail-open (acepta) para no bloquear el flujo en dev.
  */
 @Injectable()
 export class VisionService {
@@ -55,10 +58,10 @@ export class VisionService {
    * @param imageUrl URL pública de la imagen (ej http://localhost:4000/api/uploads/abc.png)
    *                 — se resuelve al archivo local en ./uploads.
    */
-  async classifyGarment(imageUrl: string): Promise<VisionResult> {
+  async classifyGarment(imageUrl: string, categoria?: Categoria | null): Promise<VisionResult> {
     if (!this.client) {
       return {
-        isClothing: true,
+        isValidProduct: true,
         label: 'Sin verificación visual',
         wearLevel: 'Desconocido',
         authenticityPct: 80,
@@ -79,7 +82,7 @@ export class VisionService {
       const mediaType = MIME[ext];
       if (!mediaType) {
         return {
-          isClothing: false,
+          isValidProduct: false,
           label: `Formato no soportado (${ext})`,
           wearLevel: 'Desconocido',
           authenticityPct: 0,
@@ -94,15 +97,24 @@ export class VisionService {
       throw new Error(`Imagen no accesible: ${imageUrl}`);
     }
 
+    // El criterio de validación y de autenticidad/condición se ajusta a la
+    // categoría declarada por el vendedor (nicho central: zapatillas de marca).
+    const focoCategoria = categoria
+      ? `El vendedor lo publicó como ${CATEGORIA_LABEL[categoria]}. Foco de revisión para esa categoría — ${CATEGORIA_FOCO_IA[categoria]} `
+      : '';
+
     const prompt =
-      'Analizá esta foto para un marketplace de ropa de segunda mano. ' +
-      'Determiná si la imagen muestra UNA PRENDA DE VESTIR, calzado o accesorio de moda usable ' +
-      '(ej: remera, pantalón, vestido, chaqueta, zapatillas, cartera, gorra). ' +
-      'NO son prendas: personas sin ropa destacada, paisajes, comida, animales, autos, ' +
-      'electrónicos, capturas de pantalla, memes o cualquier objeto que no sea ropa. ' +
-      'Si ES una prenda, estimá su estado de conservación y un porcentaje de autenticidad/calidad. ' +
+      'Analizá esta foto para un marketplace de productos de marca de segunda mano ' +
+      '(nicho principal: zapatillas; también prendas, gorras y mochilas/bolsos de marca). ' +
+      'Determiná si la imagen muestra UN PRODUCTO DE MODA DE MARCA REVENDIBLE: ' +
+      'zapatillas, prenda de vestir (polera, hoodie, chamarra), gorra o mochila/bolso. ' +
+      focoCategoria +
+      'NO son válidos: personas sin un producto destacado, paisajes, comida, animales, autos, ' +
+      'electrónicos, capturas de pantalla, memes o cualquier objeto que no sea un producto de moda. ' +
+      'Si ES un producto válido, estimá su estado de conservación y un porcentaje de autenticidad/calidad ' +
+      '(considerando desgaste, costuras, logos y señales de réplica). ' +
       'Respondé SOLO con un objeto JSON válido, sin markdown:\n' +
-      '{"isClothing": boolean, "label": "<prenda detectada o motivo del rechazo>", ' +
+      '{"isValidProduct": boolean, "label": "<producto detectado, ej marca y modelo, o motivo del rechazo>", ' +
       '"wearLevel": "Excelente|Muy bueno|Bueno|Regular", ' +
       '"authenticityPct": <0-100>, "dictamen": "<una frase explicando el veredicto>"}';
 
@@ -131,7 +143,7 @@ export class VisionService {
     }
 
     return {
-      isClothing: parsed.isClothing === true,
+      isValidProduct: parsed.isValidProduct === true,
       label: parsed.label ?? 'Sin etiqueta',
       wearLevel: (parsed.wearLevel as VisionResult['wearLevel']) ?? 'Bueno',
       authenticityPct: Math.max(0, Math.min(100, Number(parsed.authenticityPct) || 0)),

@@ -1,5 +1,6 @@
-import { IsOptional, IsString, IsNumber, Min, Max, IsIn } from 'class-validator';
+import { IsOptional, IsString, IsNumber, Min, Max, IsIn, IsEnum } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { Categoria } from '../categoria';
 
 export class ListGarmentsDto {
   @IsOptional()
@@ -11,8 +12,8 @@ export class ListGarmentsDto {
   talla?: string;
 
   @IsOptional()
-  @IsString()
-  categoria?: string;
+  @IsEnum(Categoria)
+  categoria?: Categoria;
 
   @IsOptional()
   @Type(() => Number)

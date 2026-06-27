@@ -1,8 +1,9 @@
-import { IsString, IsNumber, IsOptional, Min } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsEnum, Min } from 'class-validator';
 import { Type } from 'class-transformer';
+import { Categoria } from '../categoria';
 
 /**
- * Campos editables de una prenda ya publicada. Todos opcionales:
+ * Campos editables de un producto ya publicado. Todos opcionales:
  * se actualiza solo lo que venga en el body. El precio es off-chain
  * (vive en PostgreSQL), así que se puede editar aunque el NFT ya esté minteado.
  */
@@ -27,13 +28,25 @@ export class UpdateGarmentDto {
 
   @IsOptional()
   @IsString()
-  talla?: string;
+  modelo?: string;
 
   @IsOptional()
   @IsString()
-  categoria?: string;
+  colorway?: string;
+
+  @IsOptional()
+  @IsString()
+  talla?: string;
+
+  @IsOptional()
+  @IsEnum(Categoria)
+  categoria?: Categoria;
 
   @IsOptional()
   @IsString()
   estilo?: string;
+
+  @IsOptional()
+  @IsString()
+  condicion?: string;
 }

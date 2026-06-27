@@ -24,7 +24,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
  */
 contract ReWearEscrow is Ownable, ReentrancyGuard {
 
-    uint256 public commissionBps = 250;          // 2.5 % en basis points
+    uint256 public commissionBps = 300;          // 3 % en basis points (la asume el vendedor)
     uint256 public constant DELIVERY_TIMEOUT = 7 days;
 
     enum State { FUNDED, COMPLETED, DISPUTED, REFUNDED }

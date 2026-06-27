@@ -143,7 +143,7 @@ export class GarmentsService {
       },
     });
 
-    if (!garment) throw new NotFoundException('Prenda no encontrada');
+    if (!garment) throw new NotFoundException('Producto no encontrado');
 
     // Reputación del vendedor (promedio de estrellas, nº de reseñas y ventas).
     const [agg, salesCount] = await Promise.all([
@@ -175,9 +175,9 @@ export class GarmentsService {
    */
   async update(id: string, sellerId: string, dto: UpdateGarmentDto) {
     const garment = await this.prisma.garment.findUnique({ where: { id } });
-    if (!garment) throw new NotFoundException('Prenda no encontrada');
+    if (!garment) throw new NotFoundException('Producto no encontrado');
     if (garment.sellerId !== sellerId) {
-      throw new ForbiddenException('No podés editar una prenda que no es tuya');
+      throw new ForbiddenException('No podés editar un producto que no es tuyo');
     }
 
     return this.prisma.garment.update({
@@ -210,17 +210,20 @@ export class GarmentsService {
       },
     });
 
-    if (!garment) throw new NotFoundException('Prenda no encontrada');
+    if (!garment) throw new NotFoundException('Producto no encontrado');
 
     return {
       name: garment.titulo,
-      description: garment.descripcion || `Prenda verificada por ReWear: ${garment.titulo}`,
+      description: garment.descripcion || `Producto verificado por ReWear: ${garment.titulo}`,
       image: garment.imagenes[0] || '',
       external_url: `http://localhost:3000/garment/${garment.id}`,
       attributes: [
         { trait_type: 'Marca', value: garment.marca || 'Sin marca' },
+        { trait_type: 'Modelo', value: garment.modelo || '—' },
+        { trait_type: 'Colorway', value: garment.colorway || '—' },
         { trait_type: 'Talla', value: garment.talla || 'Única' },
         { trait_type: 'Categoría', value: garment.categoria || 'Otros' },
+        { trait_type: 'Condición declarada', value: garment.condicion || '—' },
         { trait_type: 'Estado', value: garment.verification?.wearLevel || 'Verificado' },
         {
           trait_type: 'Autenticidad',
